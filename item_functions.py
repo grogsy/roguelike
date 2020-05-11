@@ -2,6 +2,7 @@ import random
 import tcod
 from game_messages import Message
 from entity import Entity, Item, Scroll, Potion
+from components.ai import ConfusedMonster
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')
@@ -72,6 +73,7 @@ def cast_fireball(base_damage, radius, *args, **kwargs):
     dmg_type    = kwargs.get('damage_type')
 
     results = []
+    destroyed_items = []
 
     damage = base_damage
 
@@ -107,18 +109,61 @@ def cast_fireball(base_damage, radius, *args, **kwargs):
                     })
                 results.extend(entity.fighter.take_damage(damage, dmg_type))
             elif isinstance(entity, Item):
-                if not fov_map.is_in_fov(entity.x, entity.y):
-                    results.append({
-                        'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
-                    })
-                elif isinstance(entity, Scroll):
-                    results.append({
-                        'message': Message(f"The {entity.name} crumbles into ashes!")
-                    })
-                elif isinstance(entity, Potion):
-                    results.append({
-                        'message': Message(f"The {entity.name} bursts open and shatters!")
-                    })
-                entities.pop(entities.index(entity))
+                destroyed_items.append(entity)
+        
+        # this will be very slow. need to change this some time in the future
+        for item in destroyed_items:
+            for i, entity in enumerate(entities):
+                if item.id == entity.id:
+                    if not fov_map.is_in_fov(item.x, item.y):
+                        results.append({
+                            'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
+                        })
+                    elif isinstance(item, Scroll):
+                        results.append({
+                            'message': Message(f"The {item.name} crumbles into ashes!")
+                        })
+                    elif isinstance(item, Potion):
+                        results.append({
+                            'message': Message(f"The {item.name} bursts open and shatters!")
+                        })
+
+                    entities.pop(i)
+                    break
+
+    return results
+
+def cast_confuse(debuff_duration, *args, **kwargs):
+    entities    = kwargs.get('entities')
+    fov_map     = kwargs.get('fov_map')
+    target_x    = kwargs.get('target_x')
+    target_y    = kwargs.get('target_y')
+    caster      = kwargs.get('user')
+
+    results = []
+
+    if not fov_map.is_in_fov(target_x, target_y):
+        results.append({
+            'consumed': False,
+            'message': Message("Target is out of range", tcod.yellow)
+        })
+
+        return results
+    
+    for entity in entities:
+        if entity.ai and entity.x == target_x and entity.y == target_y:
+            confused_ai = ConfusedMonster(entity.ai, number_of_turns=debuff_duration)
+            confused_ai.owner = entity
+            entity.ai = confused_ai
+
+            results.append({
+                'consumed': True,
+                'source': caster.name,
+                'message': Message(f"The {entity.name} is disoriented.")
+            })
+
+            break
+    else:
+        results.append({'consumed': False, 'message': Message('Invalid target.', tcod.yellow)})
 
     return results

@@ -111,8 +111,10 @@ class GameMap:
                 item_chance = randint(0, 100)
                 if item_chance < 70:
                     item = Potion(x, y, **items.potion_of_healing)
-                elif item_chance < 85:
+                elif item_chance < 80:
                     item = Scroll(x, y, **items.scroll_of_fireball)
+                elif item_chance < 90:
+                    item = Scroll(x, y, **items.scroll_of_confuse_monster)
                 else:
                     item = Scroll(x, y, **items.scroll_of_lightning)
                 entities.append(item)

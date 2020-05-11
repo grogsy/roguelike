@@ -38,3 +38,10 @@ scroll_of_fireball = {
                     requires_target=True
                   )
 }
+
+scroll_of_confuse_monster = {
+    'name': 'Scroll of Confuse Monster',
+    'char': '#',
+    'color': tcod.light_pink,
+    'use_effect': UseEffect(effect_function=item_functions.cast_confuse, debuff_duration=10, requires_target=True)
+}
