@@ -30,7 +30,11 @@ class Menu:
         y = header_height
         letter_index = ord('a')
         for opt in options:
-            text = f"({chr(letter_index)}) {opt.name}"
+            if hasattr(opt, 'name'):
+                name = opt.name
+            else:
+                name = opt
+            text = f"({chr(letter_index)}) {name}"
             tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, text)
             y += 1
             letter_index += 1
