@@ -31,6 +31,8 @@ class Entity:
         self.render_order = render_order
         self.fighter = fighter
         self.inventory = inventory
+        
+        self.ai = None
 
         self.id = str(uuid4())
 
