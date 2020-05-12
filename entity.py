@@ -31,7 +31,7 @@ class Entity:
         self.render_order = render_order
         self.fighter = fighter
         self.inventory = inventory
-        
+
         self.ai = None
 
         self.id = str(uuid4())
@@ -182,6 +182,7 @@ class Item(Entity):
     def __init__(self, *args, use_effect=None, **kwargs):
         super().__init__(*args, **kwargs, blocks=False, render_order=RenderOrder.ITEM)
         self.use_effect = use_effect
+        self.use_effect.source = self
 
 class Scroll(Item):
     def __init__(self, *args, **kwargs):
