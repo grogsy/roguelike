@@ -45,3 +45,10 @@ scroll_of_confuse_monster = {
     'color': tcod.light_pink,
     'use_effect': UseEffect(effect_function=item_functions.cast_confuse, debuff_duration=10, requires_target=True)
 }
+
+scroll_of_strength = {
+    'name': 'Scroll of Strength',
+    'char': '#',
+    'color': tcod.lime,
+    'use_effect': UseEffect(effect_function=item_functions.cast_strength_buff, base_amount=3, duration=60)
+}

@@ -3,6 +3,7 @@ import tcod
 from game_messages import Message
 from entity import Entity, Item, Scroll, Potion
 from components.ai import ConfusedMonster
+from components.fighter import Buff
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')
@@ -61,6 +62,28 @@ def cast_lightning(base_damage, max_range, *args, **kwargs):
             'target': None,
             'message': Message('No enemy close enough to strike.', tcod.red)
         })
+
+    return results
+
+def cast_strength_buff(base_amount, duration, *args, **kwargs):
+    caster = kwargs.get('user')
+
+    results = []
+
+    increase_amount = base_amount
+    attack_buff = Buff(
+        effect=increase_amount, duration=duration,
+        expire_message=Message(f"Your improved strength fades.", tcod.light_red),
+        name="strength_scroll"
+    )
+
+    caster.fighter.buffs.add_attack_buff(attack_buff)
+
+    results.append({
+        'consumed': True,
+        'source': caster.name,
+        'message': Message('You feel yourself become stronger!', tcod.light_green)
+    })
 
     return results
 
