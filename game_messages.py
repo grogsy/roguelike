@@ -1,6 +1,6 @@
 import tcod
 import textwrap
-from game_states import GameStates
+from game_state import GameStates
 
 class Message:
     def __init__(self, text, color=tcod.white):
@@ -8,7 +8,7 @@ class Message:
         self.color = color
 
 # deferred import due to circular dependancy
-from death_functions import kill_monster, kill_player
+from game_state.death_functions import kill_monster, kill_player
 
 class MessageLog:
     '''

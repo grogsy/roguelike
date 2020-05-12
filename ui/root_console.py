@@ -1,8 +1,7 @@
 import textwrap
 import tcod
 from map_objects import GameMap, Door
-from render_order import RenderOrder
-from game_states import GameStates
+from game_state import GameStates, RenderOrder
 from entity import Scroll
 # from menus import inventory_menu
 from .menu import Menu

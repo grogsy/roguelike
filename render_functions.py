@@ -6,7 +6,7 @@ import tcod
 from colors import Colors
 from entity import get_blocking_entities_at_location
 from debug import label_rooms, clear_labels
-from render_order import RenderOrder
+from game_state import RenderOrder
 from ui import Panel
 from map_objects import Door
 

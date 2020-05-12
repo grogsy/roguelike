@@ -15,9 +15,8 @@ from game_messages import Message, MessageLog
 from ui import RootConsole
 from colors import Colors
 
-from game_states import GameStates
+from game_state import GameStates, RenderOrder
 from fov_functions import initialize_fov, recompute_fov, FOV_Map
-from render_order import RenderOrder
 
 from log import GameLog
 from debug import generate_level, give_items

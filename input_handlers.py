@@ -1,5 +1,5 @@
 import tcod
-from game_states import GameStates
+from game_state import GameStates
 
 def handle_keys(key, game_state):
     if game_state == GameStates.PLAYER_TURN:

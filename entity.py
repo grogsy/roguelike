@@ -5,7 +5,7 @@ from uuid import uuid4
 import tcod
 
 from components import BasicMonster
-from render_order import RenderOrder
+from game_state import RenderOrder
 from game_messages import Message
 
 class Entity:

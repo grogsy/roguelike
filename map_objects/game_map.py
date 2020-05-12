@@ -6,7 +6,7 @@ from .tile import Tile, Door, Tunnel
 from .rectangle import Rect
 from entity import Entity, Enemy, Item, Scroll, Potion
 from components import Fighter, BasicMonster
-from render_order import RenderOrder
+from game_state import RenderOrder
 from game_messages import Message
 import items
 
@@ -109,18 +109,30 @@ class GameMap:
 
             if not tile_is_occupied:
                 item_chance = randint(0, 100)
-                if item_chance < 70:
+                if item_chance < 50:
                     item = Potion(x, y, **items.potion_of_healing)
-                elif item_chance < 80:
+                elif item_chance < 62:
                     item = Scroll(x, y, **items.scroll_of_fireball)
-                elif item_chance < 90:
+                elif item_chance < 74:
                     item = Scroll(x, y, **items.scroll_of_confuse_monster)
-                else:
+                elif item_chance < 86:
                     item = Scroll(x, y, **items.scroll_of_lightning)
+                else:
+                    item = Scroll(x, y, **items.scroll_of_strength)
                 entities.append(item)
 
     def place_item(self, x, y, **kwargs):
-        pass        
+        item_chance = randint(0, 100)
+        if item_chance < 50:
+            self.place_potion(x, y)
+        else:
+            self.place_scroll(x, y)
+
+    def place_potion(self, x, y):
+        pass
+
+    def place_scroll(self, x, y):
+        pass
  
     def create_tunnels(self, prev_room, new_room):
         new_x, new_y = new_room.center()
