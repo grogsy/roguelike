@@ -48,6 +48,14 @@ class Entity:
         self.x += dx
         self.y += dy
 
+    def update_buff_counter(self):
+        results = []
+        if self.fighter:
+            results.extend(self.fighter.buffs.update_buff_counter())
+
+        return results
+
+
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}'({self.x},{self.y}){'(dead)' if self.render_order == RenderOrder.CORPSE else ''}>"
 
@@ -66,6 +74,8 @@ class Entity:
                 # results.extend(obj.use_effect(target=target, **kwargs))
                 results.append({ 'requires_targeting': item })
             else:
+                if isinstance(item, Scroll):
+                    results.append({'message': Message(f"You read from the {item.name}.")})
                 results.extend(item.use_effect(**kwargs)) 
 
                 for item_use_result in results:
@@ -74,8 +84,6 @@ class Entity:
                         self.stat_logger.write_entry(item)
                         break
 
-            if isinstance(item, Scroll):
-                results.append({'message': Message(f"You read from the {item.name}.")})
 
         return results
 
