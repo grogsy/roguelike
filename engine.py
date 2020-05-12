@@ -20,7 +20,7 @@ from fov_functions import initialize_fov, recompute_fov, FOV_Map
 from render_order import RenderOrder
 
 from log import GameLog
-from debug import generate_level
+from debug import generate_level, give_items
 
 def main():
     screen_width = 100
@@ -46,6 +46,10 @@ def main():
         inventory=Inventory(capacity=26)
     )
     player.stat_logger = GameLog(parent=console, width=50)
+
+    # DEBUG
+    give_items(player)
+    
     entities = [player]
 
     # a possible refactorization of the entities container.
@@ -129,6 +133,7 @@ def main():
                         fov_map.recompute = True
 
                     # plan to move this after door check, because considering door opening to consume a turn
+                    player_turn_results.extend(player.update_buff_counter())
                     game_state = GameStates.ENEMY_TURN
                 
                 elif isinstance(game_map.tiles[dst_x][dst_y], Door):
@@ -154,7 +159,6 @@ def main():
                 else:
                     console.panel.message_log.add_message(Message('There is nothing here to pick up.', tcod.yellow))
 
-
         if game_state == GameStates.TARGETING:
             if move:
                 dx, dy = move
@@ -179,11 +183,11 @@ def main():
             prev_game_state = game_state
             game_state = GameStates.DROP_INVENTORY
         # using/dropping an item
-        if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(player.inventory.items):
+        if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context): #len(player.inventory.items):
             item = console.inventory_context[selected_item]
             if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY:
                 item_result = player.use(item, user=player, entities=entities, fov_map=fov_map)
-                
+
                 # if item requires targeting, use targeting game state context
                 if item_result[0].get('requires_targeting'):
                     player.targeting_x = player.x

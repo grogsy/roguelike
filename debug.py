@@ -1,6 +1,9 @@
 import tcod
 from fov_functions import initialize_fov
 
+from entity import Scroll, Potion
+import items
+
 def label_rooms(console, game_map):
     for i, room in enumerate(game_map.rooms):
         x, y = room.center()        
@@ -20,3 +23,10 @@ def clear_labels(console, game_map):
 
 def print_player_status(player):
     print(f"Player health: {player.fighter.hp}/{player.fighter.max_hp}")
+
+def give_items(player):
+    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_fireball))
+    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_lightning))
+    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_confuse_monster))
+    player.inventory.add_item(Potion(0, 0, **items.potion_of_healing))
+    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_strength))
