@@ -186,7 +186,7 @@ def main():
         if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context): #len(player.inventory.items):
             item = console.inventory_context[selected_item]
             if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY:
-                item_result = player.use(item, user=player, entities=entities, fov_map=fov_map)
+                item_result = player.use(item, user=player, entities=entities, fov_map=fov_map, game_map=game_map, console=console)
 
                 # if item requires targeting, use targeting game state context
                 if item_result[0].get('requires_targeting'):

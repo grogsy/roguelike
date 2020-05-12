@@ -4,6 +4,7 @@ from game_messages import Message
 from entity import Entity, Item, Scroll, Potion
 from components.ai import ConfusedMonster
 from components.fighter import Buff
+from map_objects.tile import Tunnel, Door
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')
@@ -188,5 +189,55 @@ def cast_confuse(debuff_duration, *args, **kwargs):
             break
     else:
         results.append({'consumed': False, 'message': Message('Invalid target.', tcod.yellow)})
+
+    return results
+
+def reveal_floor(*args, **kwargs):
+    game_map    = kwargs.get('game_map')
+    caster      = kwargs.get('user')
+    fov_map     = kwargs.get('fov_map')
+
+    results = []
+
+    # for room in game_map.rooms:
+    #     for x in range(room.x1, room.x2 + 1):
+    #         for y in range(room.y1, room.y2 + 1):
+    #             game_map.tiles[x][y].explored = True
+    for x in range(game_map.width):
+        for y in range(game_map.height):
+            tile = game_map.tiles[x][y]
+            if isinstance(tile, Tunnel) or isinstance(tile, Door) or not tile.blocked:
+                tile.explored = True
+
+    fov_map.recompute = True
+
+    results.append({
+        'consumed': True,
+        'source': caster.name,
+        'message': Message("All the rooms on this floor have been revealed!")
+    })
+
+    return results
+
+def teleport(*args, **kwargs):
+    results = []
+    game_map = kwargs.get('game_map')
+    fov_map = kwargs.get('fov_map')
+    caster = kwargs.get('user')
+
+    room = random.choice(game_map.rooms)
+    x = random.randint(room.x1 + 1, room.x2 - 1)
+    y = random.randint(room.y1 + 1, room.y2 - 1)
+
+    caster.x = x
+    caster.y = y
+
+    fov_map.recompute = True
+
+    results.append({
+        'consumed': True,
+        'source': caster.name,
+        'message': Message("Your teleport yourself out of there.")
+    })
 
     return results

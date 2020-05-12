@@ -52,3 +52,17 @@ scroll_of_strength = {
     'color': tcod.lime,
     'use_effect': UseEffect(effect_function=item_functions.cast_strength_buff, base_amount=3, duration=60)
 }
+
+scroll_of_magic_mapping = {
+    'name': 'Scroll of Magic Mapping',
+    'char': '#',
+    'color': tcod.light_blue,
+    'use_effect': UseEffect(effect_function=item_functions.reveal_floor)
+}
+
+scroll_of_teleport = {
+    'name': 'Scroll of Teleport',
+    'char': '#',
+    'color': tcod.lighter_magenta,
+    'use_effect': UseEffect(effect_function=item_functions.teleport)
+}
