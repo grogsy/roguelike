@@ -74,6 +74,9 @@ class Entity:
                         self.stat_logger.write_entry(item)
                         break
 
+            if isinstance(item, Scroll):
+                results.append({'message': Message(f"You read from the {item.name}.")})
+
         return results
 
     def remove_item(self, item):
