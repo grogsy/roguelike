@@ -88,7 +88,8 @@ class Entity:
         return results
 
     def remove_item(self, item):
-        self.inventory.items.remove(item)
+        self.inventory.remove_item(item)
+        # self.inventory.items.remove(item)
 
     def drop_item(self, item):
         results = []
@@ -116,6 +117,10 @@ class Entity:
         dy = other.y - self.y
         return math.sqrt(dx**2 + dy**2)
 
+class Player(Entity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 class Enemy(Entity):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, render_order=RenderOrder.ACTOR)
@@ -136,7 +141,6 @@ class Enemy(Entity):
             get_blocking_entities_at_location(entities, self.x + dx, self.y + dy)
         ):
             self.move(dx, dy)
-
 
     def move_astar(self, target, game_map, entities):
         # Create fov map that has dimensions of the game map

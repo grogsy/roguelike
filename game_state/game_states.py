@@ -9,3 +9,4 @@ class GameStates(Enum):
     TARGETING           = 6
     CHECK_PLAYER_STATS  = 7
     READABLE_INVENTORY  = 8
+    LOOTING             = 9

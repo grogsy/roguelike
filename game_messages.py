@@ -7,6 +7,9 @@ class Message:
         self.text = text
         self.color = color
 
+    def __repr__(self):
+        return self.text
+
 # deferred import due to circular dependancy
 from game_state.death_functions import kill_monster, kill_player
 
