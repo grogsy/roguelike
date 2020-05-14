@@ -58,6 +58,16 @@ class Fighter:
         self.accuracy = accuracy
         self.buffs = BuffCollection()
 
+    @property
+    def all_stats(self):
+        power = self.power + self.calculate_attack_bonus_from_buffs()['bonus']
+        return {
+            'Health': self.max_hp,
+            'Defense': self.defense,
+            'Attack Power': power,
+            'Hit Chance': self.accuracy
+        }
+
     def take_damage(self, amount, dmg_type='physical'):
         results = []
         self.hp -= amount

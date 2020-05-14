@@ -1,7 +1,8 @@
+import random
 import tcod
 from fov_functions import initialize_fov
 
-from entity import Scroll, Potion
+from entity import Scroll, Potion, Projectile
 import items
 
 def label_rooms(console, game_map):
@@ -30,3 +31,5 @@ def give_items(player):
     player.inventory.add_item(Scroll(0, 0, **items.scroll_of_confuse_monster))
     player.inventory.add_item(Potion(0, 0, **items.potion_of_healing))
     player.inventory.add_item(Scroll(0, 0, **items.scroll_of_strength))
+    player.inventory.add_item(Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_knife))
+    player.inventory.add_item(Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_dagger))

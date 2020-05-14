@@ -5,6 +5,7 @@ from entity import Entity, Item, Scroll, Potion
 from components.ai import ConfusedMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
+from util import get_entity_at_coord
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')
@@ -239,5 +240,34 @@ def teleport(*args, **kwargs):
         'source': caster.name,
         'message': Message("Your teleport yourself out of there.")
     })
+
+    return results
+
+def throw_knife(base_damage, *args, **kwargs):
+    entities        = kwargs.get('entities')
+    fov_map         = kwargs.get('fov_map')
+    target_x        = kwargs.get('target_x')
+    target_y        = kwargs.get('target_y')
+    user            = kwargs.get('user')
+
+    results = []
+
+    entity = get_entity_at_coord(target_x, target_y, entities)
+
+    results.append({
+        'consumed': True,
+        'source': user.name,
+        'message': Message('You throw the knife.')
+    })
+
+    
+    if entity and entity.fighter:
+        damage = base_damage + user.fighter.power + user.fighter.calculate_attack_bonus_from_buffs()['bonus']
+        if not fov_map.is_in_fov(entity.x, entity.y):
+            results.append({'message': Message('You hit someone.')})
+        else:
+            results.append({'message': Message(f'You hit the {entity.name} dealing {damage} damage.')})
+
+        results.extend(entity.fighter.take_damage(damage))
 
     return results

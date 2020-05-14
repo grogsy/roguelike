@@ -28,11 +28,7 @@ def main():
     map_width = 100
     map_height = 50
 
-    # x coordinate starting point screen location
-    LEFT = 0
-    # y coordinate starting point screen location
-    TOP  = screen_height - map_height
-
+    INVENTORY_CONTEXT = (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING, GameStates.THROWABLE_INVENTORY)
 
     console = RootConsole('arial10x10.png', screen_width, screen_height, map_height)
 
@@ -45,6 +41,7 @@ def main():
         inventory=Inventory(capacity=26)
     )
     player.stat_logger = GameLog(parent=console, width=50)
+
 
     # DEBUG
     give_items(player)
@@ -102,11 +99,13 @@ def main():
         show_inventory          = action.get('show_inventory')
         selected_item           = action.get('inventory_index')
         select_readable         = action.get('select_readable')
+        select_projectile       = action.get('select_projectile')
         drop_inventory          = action.get('drop_inventory')
         exit                    = action.get('exit')
         fullscreen              = action.get('fullscreen')
         confirm_action          = action.get('confirm_action')
         check_stats             = action.get('check_player_status')
+        view_stats              = action.get('view_stats')
         LEVEL_DEBUG             = action.get('generate_level')
 
         left_click = mouse_action.get('left_click')
@@ -147,16 +146,17 @@ def main():
                                 'message': Message('You attempt to open the door, but it only budges slightly.', tcod.white)
                             })
             elif pickup:
-                for entity in entities:
-                    if isinstance(entity, Item) and is_on_same_tile(player, entity):
-                        pickup_results = player.inventory.add_item(entity)
-                        # remove the entity from the entities list since the player has picked it up
-                        entities.remove(entity)
-                        player_turn_results.extend(pickup_results)
-                        player.stat_logger.log_loot()
-                        break
-                else:
-                    console.panel.message_log.add_message(Message('There is nothing here to pick up.', tcod.yellow))
+                # for entity in entities:
+                #     if isinstance(entity, Item) and is_on_same_tile(player, entity):
+                #         pickup_results = player.inventory.add_item(entity)
+                #         # remove the entity from the entities list since the player has picked it up
+                #         entities.remove(entity)
+                #         player_turn_results.extend(pickup_results)
+                #         player.stat_logger.log_loot()
+                #         break
+                # else:
+                #     console.panel.message_log.add_message(Message('There is nothing here to pick up.', tcod.yellow))
+                game_state = GameStates.LOOTING
 
         if game_state == GameStates.TARGETING:
             if move:
@@ -175,16 +175,19 @@ def main():
         if game_state != GameStates.READABLE_INVENTORY and select_readable:
             prev_game_state = game_state
             game_state = GameStates.READABLE_INVENTORY
+        if game_state != GameStates.THROWABLE_INVENTORY and select_projectile:
+            prev_game_state = game_state
+            game_state = GameStates.THROWABLE_INVENTORY
         if game_state != GameStates.SHOW_INVENTORY and show_inventory:
             prev_game_state = game_state
             game_state = GameStates.SHOW_INVENTORY
         if game_state != GameStates.DROP_INVENTORY and drop_inventory:
             prev_game_state = game_state
             game_state = GameStates.DROP_INVENTORY
-        # using/dropping an item
+        # using/dropping/looting an item
         if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context): #len(player.inventory.items):
             item = console.inventory_context[selected_item]
-            if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY:
+            if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY or game_state == GameStates.THROWABLE_INVENTORY:
                 item_result = player.use(item, user=player, entities=entities, fov_map=fov_map, game_map=game_map, console=console)
 
                 # if item requires targeting, use targeting game state context
@@ -196,21 +199,33 @@ def main():
             elif game_state == GameStates.DROP_INVENTORY:
                 item_result = player.drop_item(item)
                 entities.append(item)
+            elif game_state == GameStates.LOOTING:
+                for entity in entities:
+                    # if isinstance(entity, Item) and is_on_same_tile(player, entity):
+                    if entity.id == item.id:
+                        item_result = player.inventory.add_item(entity)
+                        # remove the entity from the entities list since the player has picked it up
+                        entities.remove(entity)
+                        player.stat_logger.log_loot()
+                        break
             player_turn_results.extend(item_result)
 
         if exit:
-            if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY):
+            if game_state in INVENTORY_CONTEXT:
                 game_state = prev_game_state
             elif game_state == GameStates.TARGETING:
                 player_turn_results.append({ 'targeting_cancelled': True })
-            elif game_state == GameStates.CHECK_PLAYER_STATS:
+            elif game_state in (GameStates.CHECK_PLAYER_STATS, GameStates.CHECK_CHAR_STATS):
                 game_state = GameStates.PLAYER_TURN
             else:
                 return True
         if fullscreen:
             tcod.console_set_fullscreen(not tcod.console_is_fullscreen())
-        if check_stats:
+        if game_state == GameStates.PLAYER_TURN and check_stats:
             game_state = GameStates.CHECK_PLAYER_STATS
+        if view_stats:
+            game_state = GameStates.CHECK_CHAR_STATS
+        
 
         next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state

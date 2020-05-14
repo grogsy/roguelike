@@ -1,3 +1,4 @@
+import random
 import item_functions
 from game_messages import Message
 import tcod
@@ -65,4 +66,18 @@ scroll_of_teleport = {
     'char': '#',
     'color': tcod.lighter_magenta,
     'use_effect': UseEffect(effect_function=item_functions.teleport)
+}
+
+throwing_knife = {
+    'name': 'Throwing Knife',
+    'char': ')',
+    'color': tcod.gray,
+    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=2, requires_target=True)
+}
+
+throwing_dagger = {
+    'name': 'Throwing Dagger',
+    'char': ')',
+    'color': tcod.silver,
+    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=5, requires_target=True)
 }

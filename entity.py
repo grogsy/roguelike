@@ -69,21 +69,23 @@ class Entity:
             item = obj
             # notify that the item requires targeting
             if item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
-                # if no target specified, try using it on self
-                # target = target or self
-                # results.extend(obj.use_effect(target=target, **kwargs))
+
                 results.append({ 'requires_targeting': item })
             else:
-                if isinstance(item, Scroll):
-                    results.append({'message': Message(f"You read from the {item.name}.")})
+                # if isinstance(item, Scroll):
+                #     results.append({'message': Message(f"You read from the {item.name}.")})
                 results.extend(item.use_effect(**kwargs)) 
 
                 for item_use_result in results:
                     if item_use_result.get('consumed'):
-                        self.remove_item(item)
+                        if isinstance(item, Stackable):
+                            item.stack_count -= 1
+                            if not item.stack_count:
+                                self.remove_item(item)
+                        else:
+                            self.remove_item(item)
                         self.stat_logger.write_entry(item)
                         break
-
 
         return results
 
@@ -203,10 +205,31 @@ class Scroll(Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def use(self, *args, **kwargs):
+        results = []
+        results.append({'message': Message(f"You read from the {item.name}.")})
+        results.extend(self.use_effect(*args, **kwargs))
+
+        return results
+
 class Potion(Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+class Stackable(Item):
+    def __init__(self, *args, stack_count=1, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stack_count = stack_count
+
+class Throwable:
+    def throw(self, *args, **kwargs):
+        results = []
+        results.extend(self.use_effect(*args, thrown=True, **kwargs))
+
+        return results
+
+class Projectile(Throwable, Stackable):
+    pass
 
 def get_blocking_entities_at_location(entities, dst_x, dst_y):
     '''

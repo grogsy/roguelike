@@ -2,10 +2,11 @@ import textwrap
 import tcod
 from map_objects import GameMap, Door
 from game_state import GameStates, RenderOrder
-from entity import Scroll, Item
+from entity import Scroll, Item, Projectile
 # from menus import inventory_menu
 from .menu import Menu
 from .panel import Panel
+from .stats import StatsView
 from game_messages import MessageLog
 
 from util import is_on_same_tile
@@ -36,6 +37,7 @@ class RootConsole:
             menu_width=50,
             header_label="Inventory"
         )
+        self.stats_view = StatsView(parent=self, width=50)
 
     def render_all(self, player, entities, game_map, fov_map, mouse_event, game_state):
         self.draw_map(game_map, fov_map)
@@ -51,7 +53,9 @@ class RootConsole:
 
         self.panel.render(player, entities, game_map, fov_map, mouse_event)
 
-        if game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING):
+        INVENTORY_CONTEXT = (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING, GameStates.THROWABLE_INVENTORY)
+
+        if game_state in INVENTORY_CONTEXT:
             if game_state == GameStates.SHOW_INVENTORY:
                 self.inventory_menu.header_label = 'Inventory'
             elif game_state == GameStates.DROP_INVENTORY:
@@ -62,11 +66,16 @@ class RootConsole:
             elif game_state == GameStates.LOOTING:
                 self.inventory_menu.header_label = 'Pick up which item?'
                 self.inventory_context = [item for item in entities if isinstance(item, Item) and is_on_same_tile(player, item)]
+            elif game_state == GameStates.THROWABLE_INVENTORY:
+                self.inventory_menu.header_label = 'Throw which item?'
+                self.inventory_context = [item for item in player.inventory.items if isinstance(item, Projectile)]
             else:
                 self.inventory_context = [item for item in player.inventory.items]
             self.inventory_menu.render(self.inventory_context)
         if game_state == GameStates.CHECK_PLAYER_STATS:
             player.stat_logger.render()
+        if game_state == GameStates.CHECK_CHAR_STATS:
+            self.stats_view.render(player)
 
         tcod.console_flush()
 

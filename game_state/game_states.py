@@ -10,3 +10,5 @@ class GameStates(Enum):
     CHECK_PLAYER_STATS  = 7
     READABLE_INVENTORY  = 8
     LOOTING             = 9
+    CHECK_CHAR_STATS    = 10
+    THROWABLE_INVENTORY = 11

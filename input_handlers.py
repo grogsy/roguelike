@@ -1,10 +1,12 @@
 import tcod
 from game_state import GameStates
 
+INVENTORY_CONTEXT = (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING, GameStates.THROWABLE_INVENTORY)
+
 def handle_keys(key, game_state):
     if game_state == GameStates.PLAYER_TURN:
         return handle_player_turn_keys(key)
-    elif game_state in (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING):
+    elif game_state in INVENTORY_CONTEXT:
         return handle_inventory_keys(key)
     elif game_state == GameStates.TARGETING:
         return handle_targeting_keys(key)
@@ -12,6 +14,8 @@ def handle_keys(key, game_state):
         return handle_player_stat_keys(key)
     elif game_state == GameStates.PLAYER_DEAD:
         return handle_player_dead_keys(key)
+    elif game_state == GameStates.CHECK_CHAR_STATS:
+        return handle_player_check_stats(key)
 
     return {}
 
@@ -44,7 +48,7 @@ def handle_player_turn_keys(key):
         return { 'exit': True }
     elif key_char == 'c':
         return { 'check_player_status': True }
-    elif key_char == ',':
+    elif key_char == ',' or key_char == 'l':
         return { 'pickup': True }
     elif key_char == 'i':
         return { 'show_inventory': True }
@@ -52,6 +56,10 @@ def handle_player_turn_keys(key):
         return { 'drop_inventory': True }
     elif key_char == 'r':
         return { 'select_readable': True }
+    elif key_char == 's':
+        return { 'view_stats': True }
+    elif key_char == 't':
+        return { 'select_projectile': True }
 
     # DEBUGGING
     if key.vk == tcod.KEY_ENTER:
@@ -114,6 +122,13 @@ def handle_targeting_keys(key):
 
     elif key.vk == tcod.KEY_ENTER or key_char == '.':
         return { 'confirm_action': True }
+
+    return {}
+
+def handle_player_check_stats(key):
+    key_char = chr(key.c)
+    if key.vk == tcod.KEY_ESCAPE or key.vk == tcod.KEY_ENTER or key_char == 's':
+        return { 'exit': True }
 
     return {}
 
