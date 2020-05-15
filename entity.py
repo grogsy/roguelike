@@ -1,10 +1,12 @@
 import random
+import copy
 import math
 from uuid import uuid4
 
 import tcod
 
-from components import BasicMonster
+# from components import BasicMonster
+from components.ai import BasicMonster
 from game_state import RenderOrder
 from game_messages import Message
 
@@ -68,8 +70,9 @@ class Entity:
         if isinstance(obj, Item):
             item = obj
             # notify that the item requires targeting
-            if item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
-
+            if item.use_effect.directional_targeting and not (kwargs.get('dx') or kwargs.get('dy')):
+                results.append({ 'requires_targeting': item})
+            elif item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
                 results.append({ 'requires_targeting': item })
             else:
                 # if isinstance(item, Scroll):
@@ -77,8 +80,25 @@ class Entity:
                 results.extend(item.use_effect(**kwargs)) 
 
                 for item_use_result in results:
-                    if item_use_result.get('consumed'):
+                    if item_use_result.get('consumed') and not isinstance(item, NonConsumable):
                         if isinstance(item, Stackable):
+                            if isinstance(item, Throwable):
+                                unconsume_chance = random.randint(1, 10) <= 4
+                                if unconsume_chance or not unconsume_chance:
+                                    x = item_use_result['landing_x']
+                                    y = item_use_result['landing_y']
+                                    entities = kwargs.get('entities')
+                                    for i, entity in enumerate(entities):
+                                        if entity.x == x and entity.y == y and entity.name == item.name:
+                                            entity.stack_count += 1
+                                            break
+                                    else:
+                                        copy_item = copy.copy(item)
+                                        copy_item.x = x
+                                        copy_item.y = y
+                                        copy_item.id = str(uuid4())
+                                        copy_item.stack_count = 1
+                                        entities.append(copy_item)
                             item.stack_count -= 1
                             if not item.stack_count:
                                 self.remove_item(item)
@@ -201,7 +221,10 @@ class Item(Entity):
         self.use_effect = use_effect
         self.use_effect.source = self
 
-class Scroll(Item):
+class Readable:
+    pass
+
+class Scroll(Readable, Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -229,6 +252,12 @@ class Throwable:
         return results
 
 class Projectile(Throwable, Stackable):
+    pass
+
+class NonConsumable(Item):
+    pass
+
+class Book(Readable, NonConsumable):
     pass
 
 def get_blocking_entities_at_location(entities, dst_x, dst_y):

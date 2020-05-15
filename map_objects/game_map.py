@@ -5,7 +5,9 @@ import tcod
 from .tile import Tile, Door, Tunnel
 from .rectangle import Rect
 from entity import Entity, Enemy, Item, Scroll, Potion
-from components import Fighter, BasicMonster
+# from components import Fighter, BasicMonster
+from components.fighter import Fighter
+from components.ai import BasicMonster
 from game_state import RenderOrder
 from game_messages import Message
 import items
