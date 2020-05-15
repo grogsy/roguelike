@@ -97,3 +97,10 @@ magic_missile_book = {
     'color': tcod.violet,
     'use_effect': UseEffect(effect_function=item_functions.cast_magic_missile, base_damage=10, max_range=5, mana_cost=7, directional_targeting=True)
 }
+
+aoe_sleep_book = {
+    'name': 'Spellbook of Mass Sleep Monster',
+    'char': '+',
+    'color': tcod.lighter_yellow,
+    'use_effect': UseEffect(effect_function=item_functions.cast_mass_sleep, radius=10, duration=60, mana_cost=15)
+}

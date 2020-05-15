@@ -2,7 +2,7 @@ import random
 import tcod
 from game_messages import Message
 from entity import Entity, Enemy, Item, Scroll, Potion, Readable, get_blocking_entities_at_location
-from components.ai import ConfusedMonster
+from components.ai import ConfusedMonster, SleepingMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
 from util import get_entity_at_coord
@@ -287,6 +287,8 @@ def throw_knife(base_damage, *args, **kwargs):
         if isinstance(entity, Enemy):
             break
 
+    damage = base_damage + user.fighter.power + user.fighter.calculate_attack_bonus_from_buffs()['bonus']
+
     if entity and isinstance(entity, Enemy):
         if fov_map.is_in_fov(entity.x, entity.y):
             results.append({
@@ -353,5 +355,30 @@ def cast_magic_missile(base_damage, max_range, mana_cost=0, *args, **kwargs):
         results.extend(entity.fighter.take_damage(damage))
 
     user.fighter.mana -= mana_cost
+
+    return results
+
+def cast_mass_sleep(radius, duration, *args, mana_cost=0, **kwargs):
+    entities = kwargs.get('entities')
+    caster = kwargs.get('user')
+    results = []
+
+    for entity in entities:
+        if isinstance(entity, Enemy) and entity.distance(caster.x, caster.y) <= radius:
+            if entity.ai:
+                sleeping_ai = SleepingMonster(entity.ai, duration=duration)
+                sleeping_ai.owner = entity
+                entity.ai = sleeping_ai
+
+                results.append({
+                    'message': Message(f"The {entity.name} has fallen into a slumber.")
+                })
+
+    caster.fighter.mana -= mana_cost
+
+    results.append({
+        'consumed': True,
+        'source': caster.name,
+    })
 
     return results
