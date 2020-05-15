@@ -6,10 +6,12 @@ import tcod
 from util import is_on_same_tile
 
 from input_handlers import handle_keys, handle_mouse
-from render_functions import clear_all, render_all, clear_old_tiles
+# from render_functions import clear_all, render_all, clear_old_tiles
 
 from entity import Entity, Enemy, Item, get_blocking_entities_at_location
-from components import Fighter, Inventory
+# from components import Fighter, Inventory
+from components.fighter import Fighter
+from components.inventory import Inventory
 from map_objects import GameMap, Door
 from game_messages import Message, MessageLog
 from ui import RootConsole
@@ -21,14 +23,14 @@ from fov_functions import initialize_fov, recompute_fov, FOV_Map
 from log import GameLog
 from debug import generate_level, give_items
 
+from constants import INVENTORY_CONTEXT
+
 def main():
     screen_width = 100
     screen_height = 70
     
     map_width = 100
     map_height = 50
-
-    INVENTORY_CONTEXT = (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING, GameStates.THROWABLE_INVENTORY)
 
     console = RootConsole('arial10x10.png', screen_width, screen_height, map_height)
 
@@ -37,7 +39,7 @@ def main():
         0, 0,
         '@', Colors.player, 'Player', 
         render_order=RenderOrder.ACTOR,
-        fighter=Fighter(hp=30, defense=2, power=5, accuracy=100),
+        fighter=Fighter(hp=30, mana=30, defense=2, power=5, accuracy=100),
         inventory=Inventory(capacity=26)
     )
     player.stat_logger = GameLog(parent=console, width=50)
@@ -159,19 +161,25 @@ def main():
                 game_state = GameStates.LOOTING
 
         if game_state == GameStates.TARGETING:
-            if move:
-                dx, dy = move
-                player.targeting_x += dx
-                player.targeting_y += dy
-            if left_click or confirm_action:
-                if left_click:
-                    target_x, target_y = left_click
-                elif confirm_action:
-                    target_x, target_y = player.targeting_x, player.targeting_y
-                item_result = player.use(targeting_item, user=player, entities=entities, fov_map=fov_map, target_x=target_x, target_y=target_y)
-                player_turn_results.extend(item_result)
-            elif right_click:
-                player_turn_results.append({ 'targeting_cancelled': True })
+            if targeting_item.use_effect.directional_targeting:
+                if move:
+                    dx, dy = move
+                    item_result = player.use(targeting_item, user=player, game_map=game_map, fov_map=fov_map, entities=entities, dx=dx, dy=dy)
+                    player_turn_results.extend(item_result)
+            else:
+                if move:
+                    dx, dy = move
+                    player.targeting_x += dx
+                    player.targeting_y += dy
+                if left_click or confirm_action:
+                    if left_click:
+                        target_x, target_y = left_click
+                    elif confirm_action:
+                        target_x, target_y = player.targeting_x, player.targeting_y
+                    item_result = player.use(targeting_item, user=player, entities=entities, fov_map=fov_map, target_x=target_x, target_y=target_y)
+                    player_turn_results.extend(item_result)
+                elif right_click:
+                    player_turn_results.append({ 'targeting_cancelled': True })
         if game_state != GameStates.READABLE_INVENTORY and select_readable:
             prev_game_state = game_state
             game_state = GameStates.READABLE_INVENTORY

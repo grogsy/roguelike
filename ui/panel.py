@@ -58,6 +58,6 @@ class Panel:
         names += self.parent.get_entities_at_player_location(player, entities)
         self.display_names(names)
         self.health_bar.render(1, 1, player.fighter.hp, player.fighter.max_hp)
-        self.mana_bar.render(1, 2, 30, 30)
+        self.mana_bar.render(1, 2, player.fighter.mana, player.fighter.max_mana)
 
         self.console_blit()

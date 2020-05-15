@@ -50,9 +50,11 @@ class Fighter:
     '''
     A fighter component which some entities utilize to engage in combat.
     '''
-    def __init__(self, hp, defense, power, accuracy):
+    def __init__(self, hp, defense, power, accuracy, mana=0):
         self.max_hp = hp
         self.hp = hp
+        self.mana = mana
+        self.max_mana = mana
         self.defense = defense
         self.power = power
         self.accuracy = accuracy

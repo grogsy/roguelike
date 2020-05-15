@@ -4,9 +4,11 @@ from game_messages import Message
 import tcod
 
 class UseEffect:
-    def __init__(self, effect_function, requires_target=False, target_msg=Message('Select target.', tcod.light_cyan), **kwargs):
+    def __init__(self, effect_function, requires_target=False, directional_targeting=False, target_msg=Message('Select target.', tcod.light_cyan), **kwargs):
+        assert not (requires_target and directional_targeting)
         self.target_msg = target_msg
         self.requires_target = requires_target
+        self.directional_targeting = directional_targeting
         self.effect_function = effect_function
 
         self.kwargs = kwargs
@@ -20,6 +22,13 @@ potion_of_healing = {
     'char': '!',
     'color': tcod.violet,
     'use_effect': UseEffect(effect_function=item_functions.heal, heal_amount=range(10, 25))
+}
+
+potion_of_mana = {
+    'name': 'Potion of Restore Mana',
+    'char': '!',
+    'color': tcod.light_azure,
+    'use_effect': UseEffect(effect_function=item_functions.mana_pot, restore_amount=range(10, 15))
 }
 
 scroll_of_lightning = {
@@ -72,12 +81,19 @@ throwing_knife = {
     'name': 'Throwing Knife',
     'char': ')',
     'color': tcod.gray,
-    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=2, requires_target=True)
+    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=2, directional_targeting=True)
 }
 
 throwing_dagger = {
     'name': 'Throwing Dagger',
     'char': ')',
     'color': tcod.silver,
-    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=5, requires_target=True)
+    'use_effect': UseEffect(effect_function=item_functions.throw_knife, base_damage=5, directional_targeting=True)
+}
+
+magic_missile_book = {
+    'name': 'Spellbook of Magic Missile',
+    'char': '+',
+    'color': tcod.violet,
+    'use_effect': UseEffect(effect_function=item_functions.cast_magic_missile, base_damage=10, max_range=5, mana_cost=7, directional_targeting=True)
 }

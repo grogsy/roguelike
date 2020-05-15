@@ -1,6 +1,7 @@
 import tcod
 from collections import defaultdict
 from game_messages import Message
+from entity import Stackable
 
 class StackManager:
     '''
@@ -33,19 +34,21 @@ class Inventory:
                 'message': Message('You cannot carry any more, your inventory is full.', tcod.yellow)
             })
         else:
-            # rough draft of implementing stackable item
-            # if isinstance(item, Stackable):
-            #     for i in self.items:
-            #         if i.name == item.name:
-            #             i.stack_count += item.stack_count
-            #             break
-                
             results.append({
                 'item_added': item,
                 'message': Message(f"You pick up the {item.name}.", tcod.lighter_blue)
             })
-
-            self.items.append(item)
+    
+            # rough draft of implementing stackable item
+            if isinstance(item, Stackable):
+                for i in self.items:
+                    if i.name == item.name:
+                        i.stack_count += item.stack_count
+                        break
+                else:
+                    self.items.append(item)
+            else:    
+                self.items.append(item)
 
         return results
 

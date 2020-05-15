@@ -1,7 +1,7 @@
 import random
 import tcod
 from game_messages import Message
-from entity import Entity, Item, Scroll, Potion
+from entity import Entity, Enemy, Item, Scroll, Potion, Readable, get_blocking_entities_at_location
 from components.ai import ConfusedMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
@@ -24,6 +24,18 @@ def heal(heal_amount, *args, **kwargs):
             results.append({ 'source': 'Player', 'consumed': True, 'message': Message("You feel better.", tcod.light_green) })
         else:
             results.append({ 'consumed': True, 'message': Message(f"The {user.name} feels better.") })
+
+    return results
+
+def mana_pot(restore_amount, *args, **kwargs):
+    user = kwargs.get('user')
+    results = []
+
+    user.fighter.mana += random.randint(min(restore_amount), max(restore_amount))
+    if user.fighter.mana > user.fighter.max_mana:
+        user.fighter.mana = user.fighter.max_mana
+
+    results.append({'source': user.name, 'consumed': True, 'message': Message("You feel more energetic.", tcod.light_azure)})
 
     return results
 
@@ -144,7 +156,7 @@ def cast_fireball(base_damage, radius, *args, **kwargs):
                         results.append({
                             'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
                         })
-                    elif isinstance(item, Scroll):
+                    elif isinstance(item, Readable):
                         results.append({
                             'message': Message(f"The {item.name} crumbles into ashes!")
                         })
@@ -246,13 +258,16 @@ def teleport(*args, **kwargs):
 def throw_knife(base_damage, *args, **kwargs):
     entities        = kwargs.get('entities')
     fov_map         = kwargs.get('fov_map')
-    target_x        = kwargs.get('target_x')
-    target_y        = kwargs.get('target_y')
+    game_map        = kwargs.get('game_map')
+    # target_x        = kwargs.get('target_x')
+    # target_y        = kwargs.get('target_y')
+    dx              = kwargs.get('dx')
+    dy              = kwargs.get('dy')
     user            = kwargs.get('user')
 
     results = []
 
-    entity = get_entity_at_coord(target_x, target_y, entities)
+    # entity = get_entity_at_coord(target_x, target_y, entities)
 
     results.append({
         'consumed': True,
@@ -260,14 +275,83 @@ def throw_knife(base_damage, *args, **kwargs):
         'message': Message('You throw the knife.')
     })
 
-    
-    if entity and entity.fighter:
-        damage = base_damage + user.fighter.power + user.fighter.calculate_attack_bonus_from_buffs()['bonus']
-        if not fov_map.is_in_fov(entity.x, entity.y):
-            results.append({'message': Message('You hit someone.')})
+    x = user.x + dx
+    y = user.y + dy
+
+    entity = get_blocking_entities_at_location(entities, x, y)
+
+    while not entity and not game_map.is_blocked_by_tiling(x + dx, y + dy):
+        x += dx
+        y += dy
+        entity = get_blocking_entities_at_location(entities, x, y)
+        if isinstance(entity, Enemy):
+            break
+
+    if entity and isinstance(entity, Enemy):
+        if fov_map.is_in_fov(entity.x, entity.y):
+            results.append({
+                'message': Message(f"You hit the {entity.name} dealing {damage} damage.")
+            })
         else:
-            results.append({'message': Message(f'You hit the {entity.name} dealing {damage} damage.')})
+            results.append({
+                'message': Message("You hit someone with your spell.")
+            })
 
         results.extend(entity.fighter.take_damage(damage))
+
+    results[0]['landing_x'] = x
+    results[0]['landing_y'] = y
+
+    return results
+
+def cast_magic_missile(base_damage, max_range, mana_cost=0, *args, **kwargs):
+    dx = kwargs.get('dx')
+    dy = kwargs.get('dy')
+    game_map = kwargs.get('game_map')
+    fov_map  = kwargs.get('fov_map')
+    entities = kwargs.get('entities')
+    user = kwargs.get('user')
+
+    if user.fighter.mana < mana_cost:
+        return [{
+            'message': Message("You do not have enough mana to cast that spell.", tcod.red),
+            'targeting_cancelled': True
+            }]
+
+    damage = base_damage
+
+    results = [{
+        'consumed': True,
+        'source': user.name,
+        'message': Message('You cast a magic missile spell.')
+    }]
+
+    x = user.x + dx
+    y = user.y + dy
+
+    entity = get_blocking_entities_at_location(entities, x, y)
+
+    # while not entity or not game_map.is_blocked_by_tiling(x, y) or not (abs(user.x - x) == max_range or abs(user.y - y) == max_range): 
+    while not entity and (abs(user.x - x) <= max_range and abs(user.y - y) <= max_range):
+        x += dx
+        y += dy
+        # print(x, y)
+        entity = get_blocking_entities_at_location(entities, x, y)
+        if isinstance(entity, Enemy):
+            break
+
+    if entity and isinstance(entity, Enemy):
+        if fov_map.is_in_fov(entity.x, entity.y):
+            results.append({
+                'message': Message(f"You hit the {entity.name} dealing {damage} damage.")
+            })
+        else:
+            results.append({
+                'message': Message("You hit someone with your spell.")
+            })
+
+        results.extend(entity.fighter.take_damage(damage))
+
+    user.fighter.mana -= mana_cost
 
     return results
