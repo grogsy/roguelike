@@ -1,7 +1,7 @@
 import tcod
 from game_state import GameStates
+from constants import INVENTORY_CONTEXT
 
-INVENTORY_CONTEXT = (GameStates.SHOW_INVENTORY, GameStates.DROP_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.LOOTING, GameStates.THROWABLE_INVENTORY)
 
 def handle_keys(key, game_state):
     if game_state == GameStates.PLAYER_TURN:
