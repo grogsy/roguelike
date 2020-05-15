@@ -12,3 +12,4 @@ class GameStates(Enum):
     LOOTING             = 9
     CHECK_CHAR_STATS    = 10
     THROWABLE_INVENTORY = 11
+    QUAFFABLE_INVENTORY = 12
