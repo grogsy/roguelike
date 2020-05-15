@@ -78,6 +78,8 @@ def main():
     player.targeting_x = 0
     player.targeting_y = 0
 
+    TURN_COUNT = 1
+
     while not tcod.console_is_window_closed():
         # capture user input, this modifies the input objects(key and mouse) defined above
         tcod.sys_check_for_event(tcod.EVENT_KEY_PRESS | tcod.EVENT_MOUSE, key, mouse)
@@ -102,6 +104,7 @@ def main():
         selected_item           = action.get('inventory_index')
         select_readable         = action.get('select_readable')
         select_projectile       = action.get('select_projectile')
+        select_quaffable        = action.get('select_quaffable')
         drop_inventory          = action.get('drop_inventory')
         exit                    = action.get('exit')
         fullscreen              = action.get('fullscreen')
@@ -134,7 +137,9 @@ def main():
 
                     # plan to move this after door check, because considering door opening to consume a turn
                     player_turn_results.extend(player.update_buff_counter())
+                    player.update_mana_regen(TURN_COUNT)
                     game_state = GameStates.ENEMY_TURN
+                    TURN_COUNT += 1
                 
                 elif isinstance(game_map.tiles[dst_x][dst_y], Door):
                     door = game_map.tiles[dst_x][dst_y]
@@ -148,6 +153,15 @@ def main():
                                 'message': Message('You attempt to open the door, but it only budges slightly.', tcod.white)
                             })
             elif pickup:
+                items_on_same_tile = [entity for entity in entities if isinstance(entity, Item) and (entity.x == player.x and entity.y == player.y)]
+                if len(items_on_same_tile) == 1:
+                    item = items_on_same_tile[0]
+                    pickup_results = player.inventory.add_item(item)
+                    entities.remove(item)
+                    player_turn_results.extend(pickup_results)
+                    player.stat_logger.log_loot()
+                else:
+                    game_state = GameStates.LOOTING
                 # for entity in entities:
                 #     if isinstance(entity, Item) and is_on_same_tile(player, entity):
                 #         pickup_results = player.inventory.add_item(entity)
@@ -158,7 +172,6 @@ def main():
                 #         break
                 # else:
                 #     console.panel.message_log.add_message(Message('There is nothing here to pick up.', tcod.yellow))
-                game_state = GameStates.LOOTING
 
         if game_state == GameStates.TARGETING:
             if targeting_item.use_effect.directional_targeting:
@@ -180,9 +193,14 @@ def main():
                     player_turn_results.extend(item_result)
                 elif right_click:
                     player_turn_results.append({ 'targeting_cancelled': True })
+                TURN_COUNT += 1
+                print(TURN_COUNT)
         if game_state != GameStates.READABLE_INVENTORY and select_readable:
             prev_game_state = game_state
             game_state = GameStates.READABLE_INVENTORY
+        if game_state != GameStates.QUAFFABLE_INVENTORY and select_quaffable:
+            prev_game = game_state
+            game_state = GameStates.QUAFFABLE_INVENTORY
         if game_state != GameStates.THROWABLE_INVENTORY and select_projectile:
             prev_game_state = game_state
             game_state = GameStates.THROWABLE_INVENTORY
@@ -217,6 +235,7 @@ def main():
                         player.stat_logger.log_loot()
                         break
             player_turn_results.extend(item_result)
+            TURN_COUNT += 1
 
         if exit:
             if game_state in INVENTORY_CONTEXT:

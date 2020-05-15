@@ -53,8 +53,12 @@ class Fighter:
     def __init__(self, hp, defense, power, accuracy, mana=0):
         self.max_hp = hp
         self.hp = hp
+
         self.mana = mana
         self.max_mana = mana
+        self.base_mana_regen = 1
+        self.base_mana_regen_rate = 20 # rate is in term of player turns
+
         self.defense = defense
         self.power = power
         self.accuracy = accuracy
@@ -130,3 +134,6 @@ class Fighter:
             
         return results
         
+    def update_mana_regen(self, turn_count):
+        if turn_count % self.base_mana_regen_rate == 0 and self.mana < self.max_mana:
+            self.mana += self.base_mana_regen

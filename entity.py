@@ -57,6 +57,9 @@ class Entity:
 
         return results
 
+    def update_mana_regen(self, turn_count):
+        self.fighter.update_mana_regen(turn_count)
+
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}'({self.x},{self.y}){'(dead)' if self.render_order == RenderOrder.CORPSE else ''}>"
