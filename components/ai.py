@@ -42,3 +42,21 @@ class ConfusedMonster:
             })
 
         return results
+
+class SleepingMonster:
+    def __init__(self, prev_ai, duration):
+        self.duration = duration
+        self.prev_ai  = prev_ai
+
+    def take_turn(self, *args, **kwargs):
+        results = []
+        if self.duration <= 0:
+            self.owner.ai = self.prev_ai
+
+            results.append({
+                'message': Message(f"The {self.owner.name} has woken up!", tcod.orange)
+            })
+        else:
+            self.duration -= 1
+
+        return results
