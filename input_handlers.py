@@ -60,6 +60,8 @@ def handle_player_turn_keys(key):
         return { 'view_stats': True }
     elif key_char == 't':
         return { 'select_projectile': True }
+    elif key_char == 'q':
+        return { 'select_quaffable': True }
 
     # DEBUGGING
     if key.vk == tcod.KEY_ENTER:
