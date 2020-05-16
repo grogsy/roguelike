@@ -259,20 +259,16 @@ def throw_knife(base_damage, *args, **kwargs):
     entities        = kwargs.get('entities')
     fov_map         = kwargs.get('fov_map')
     game_map        = kwargs.get('game_map')
-    # target_x        = kwargs.get('target_x')
-    # target_y        = kwargs.get('target_y')
     dx              = kwargs.get('dx')
     dy              = kwargs.get('dy')
     user            = kwargs.get('user')
+    item_source     = kwargs.get('source')
 
     results = []
-
-    # entity = get_entity_at_coord(target_x, target_y, entities)
 
     results.append({
         'consumed': True,
         'source': user.name,
-        'message': Message('You throw the knife.')
     })
 
     x = user.x + dx
@@ -296,7 +292,7 @@ def throw_knife(base_damage, *args, **kwargs):
             })
         else:
             results.append({
-                'message': Message("You hit someone with your spell.")
+                'message': Message(f"You hit someone with the {item_source.name}.")
             })
 
         results.extend(entity.fighter.take_damage(damage))
@@ -337,7 +333,6 @@ def cast_magic_missile(base_damage, max_range, mana_cost=0, *args, **kwargs):
     while not entity and (abs(user.x - x) <= max_range and abs(user.y - y) <= max_range):
         x += dx
         y += dy
-        # print(x, y)
         entity = get_blocking_entities_at_location(entities, x, y)
         if isinstance(entity, Enemy):
             break

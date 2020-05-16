@@ -60,7 +60,6 @@ def generate_random_projectile(x, y):
     else:
         item = Projectile(x, y, stack_count=random.randint(1, 10), **throwing_knife)
 
-    print(item_chance, item)
 
     return item
 

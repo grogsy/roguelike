@@ -9,6 +9,7 @@ import tcod
 from components.ai import BasicMonster
 from game_state import RenderOrder
 from game_messages import Message
+from util import entity_on_tile, is_same_entity_name
 
 class Entity:
     '''
@@ -86,40 +87,10 @@ class Entity:
             else:
                 results.extend(item.use(**kwargs)) 
 
-                for item_use_result in results:
-                    if item_use_result.get('consumed') and not isinstance(item, NonConsumable):
-                        if isinstance(item, Stackable):
-                            if isinstance(item, Throwable):
-                                # when you throw items and have the chance to retrieve some of them back
-                                unconsume_chance = random.randint(1, 10) <= 4
-                                if unconsume_chance or not unconsume_chance:
-                                    x = item_use_result['landing_x']
-                                    y = item_use_result['landing_y']
-                                    entities = kwargs.get('entities')
-                                    for i, entity in enumerate(entities):
-                                        if entity.x == x and entity.y == y and entity.name == item.name:
-                                            entity.stack_count += 1
-                                            break
-                                    else:
-                                        copy_item = copy.copy(item)
-                                        copy_item.x = x
-                                        copy_item.y = y
-                                        copy_item.id = str(uuid4())
-                                        copy_item.stack_count = 1
-                                        entities.append(copy_item)
-                            item.stack_count -= 1
-                            if not item.stack_count:
-                                self.remove_item(item)
-                        else:
-                            self.remove_item(item)
-                        self.stat_logger.write_entry(item)
-                        break
-
         return results
 
     def remove_item(self, item):
         self.inventory.remove_item(item)
-        # self.inventory.items.remove(item)
 
     def drop_item(self, item):
         results = []
@@ -231,28 +202,45 @@ class Item(Entity):
         self.use_effect.source = self
 
     def use(self, *args, **kwargs):
+        owner = kwargs.get('user')
+        print(owner)
         results = []
         results.extend(self.use_effect(*args, **kwargs))
 
         return results
 
 class Readable:
-    pass
+    def use(self, *args, **kwargs):
+        results = []
+        results.append({'message': Message(f"You read from the {self.name}.")})
+        results.extend(super().use(*args, **kwargs))
+
+        return results
 
 class Scroll(Readable, Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def use(self, *args, **kwargs):
+        owner = kwargs.get('user')
         results = []
-        results.append({'message': Message(f"You read from the {self.name}.")})
-        results.extend(self.use_effect(*args, **kwargs))
-
+        results.extend(super().use(*args, **kwargs))
+        owner.remove_item(self)
+        
         return results
+
 
 class Potion(Item):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def use(self, *args, **kwargs):
+        owner = kwargs.get('user')
+        results = []
+        results.extend(super().use(*args, **kwargs))
+        owner.remove_item(self)
+
+        return results
 
 class Stackable(Item):
     def __init__(self, *args, stack_count=1, **kwargs):
@@ -273,7 +261,34 @@ class Throwable:
         return results
 
 class Projectile(Throwable, Stackable):
-    pass
+    def use(self, *args, **kwargs):
+        owner = kwargs.get('user')
+        results = [{'message': Message(f"You throw the {self.name}.")}]
+        results.extend(self.use_effect(*args, source=self, **kwargs))
+        for res in results:
+            if res.get('consumed'):
+                unconsume_chance = random.randint(1, 10) <= 4 or True
+                # when you throw items and have the chance to retrieve some of them back
+                if unconsume_chance:
+                    x = res['landing_x']
+                    y = res['landing_y']
+                    entities = kwargs.get('entities')
+                    for entity in entities:
+                        if entity_on_tile(entity, x, y) and is_same_entity_name(entity, self):
+                            entity.stack_count += 1
+                            break
+                    else:
+                        copy_item = copy.copy(self)
+                        copy_item.x = x
+                        copy_item.y = y
+                        copy_item.id = str(uuid4())
+                        copy_item.stack_count = 1
+                        entities.append(copy_item)
+                self.stack_count -=1 
+                if not self.stack_count:
+                    owner.remove_item(self)
+
+        return results
 
 class NonConsumable(Item):
     pass
