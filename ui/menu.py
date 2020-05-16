@@ -1,5 +1,5 @@
 import tcod
-from entity import Stackable, Item
+from entity import Entity, Stackable, Item
 
 class Menu:
     def __init__(self, parent, menu_width, header_label):
@@ -31,7 +31,7 @@ class Menu:
         y = header_height
         letter_index = ord('a')
         for opt in options:
-            if hasattr(opt, 'name'):
+            if isinstance(opt, Entity):
                 name = opt.name
                 if isinstance(opt, Stackable):
                     name = f"{name} x{opt.stack_count}" 
