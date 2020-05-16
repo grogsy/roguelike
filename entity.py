@@ -67,6 +67,9 @@ class Entity:
     def __str__(self):
         return self.name
 
+    def __eq__(self, other):
+        return self.id == other.id
+
     def use(self, obj, target=None, **kwargs):
         '''
         obj param should support more than just items(possibly different entities)
@@ -81,7 +84,7 @@ class Entity:
             elif item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
                 results.append({ 'requires_targeting': item })
             else:
-                results.extend(item.use_effect(**kwargs)) 
+                results.extend(item.use(**kwargs)) 
 
                 for item_use_result in results:
                     if item_use_result.get('consumed') and not isinstance(item, NonConsumable):
@@ -227,6 +230,12 @@ class Item(Entity):
         self.use_effect = use_effect
         self.use_effect.source = self
 
+    def use(self, *args, **kwargs):
+        results = []
+        results.extend(self.use_effect(*args, **kwargs))
+
+        return results
+
 class Readable:
     pass
 
@@ -236,7 +245,7 @@ class Scroll(Readable, Item):
 
     def use(self, *args, **kwargs):
         results = []
-        results.append({'message': Message(f"You read from the {item.name}.")})
+        results.append({'message': Message(f"You read from the {self.name}.")})
         results.extend(self.use_effect(*args, **kwargs))
 
         return results
@@ -255,6 +264,9 @@ class Stackable(Item):
 
 class Throwable:
     def throw(self, *args, **kwargs):
+        '''
+        unused, might be removed in the future
+        '''
         results = []
         results.extend(self.use_effect(*args, thrown=True, **kwargs))
 

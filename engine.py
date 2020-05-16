@@ -6,13 +6,13 @@ import tcod
 from util import is_on_same_tile
 
 from input_handlers import handle_keys, handle_mouse
-# from render_functions import clear_all, render_all, clear_old_tiles
 
 from entity import Entity, Enemy, Item, get_blocking_entities_at_location
-# from components import Fighter, Inventory
+
 from components.fighter import Fighter
 from components.inventory import Inventory
 from map_objects import GameMap, Door
+
 from game_messages import Message, MessageLog
 from ui import RootConsole
 from colors import Colors
@@ -154,6 +154,7 @@ def main():
                             })
             elif pickup:
                 items_on_same_tile = [entity for entity in entities if isinstance(entity, Item) and (entity.x == player.x and entity.y == player.y)]
+                # if its just one item, forego having to display a looting menu
                 if len(items_on_same_tile) == 1:
                     item = items_on_same_tile[0]
                     pickup_results = player.inventory.add_item(item)
@@ -162,16 +163,6 @@ def main():
                     player.stat_logger.log_loot()
                 else:
                     game_state = GameStates.LOOTING
-                # for entity in entities:
-                #     if isinstance(entity, Item) and is_on_same_tile(player, entity):
-                #         pickup_results = player.inventory.add_item(entity)
-                #         # remove the entity from the entities list since the player has picked it up
-                #         entities.remove(entity)
-                #         player_turn_results.extend(pickup_results)
-                #         player.stat_logger.log_loot()
-                #         break
-                # else:
-                #     console.panel.message_log.add_message(Message('There is nothing here to pick up.', tcod.yellow))
 
         if game_state == GameStates.TARGETING:
             if targeting_item.use_effect.directional_targeting:
@@ -190,11 +181,11 @@ def main():
                     elif confirm_action:
                         target_x, target_y = player.targeting_x, player.targeting_y
                     item_result = player.use(targeting_item, user=player, entities=entities, fov_map=fov_map, target_x=target_x, target_y=target_y)
+                    TURN_COUNT += 1
+                    print(TURN_COUNT)
                     player_turn_results.extend(item_result)
                 elif right_click:
                     player_turn_results.append({ 'targeting_cancelled': True })
-                TURN_COUNT += 1
-                print(TURN_COUNT)
         if game_state != GameStates.READABLE_INVENTORY and select_readable:
             prev_game_state = game_state
             game_state = GameStates.READABLE_INVENTORY
@@ -213,9 +204,8 @@ def main():
         # using/dropping/looting an item
         if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context): #len(player.inventory.items):
             item = console.inventory_context[selected_item]
-            if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY or game_state == GameStates.THROWABLE_INVENTORY:
+            if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY or game_state == GameStates.THROWABLE_INVENTORY or game_state == GameStates.QUAFFABLE_INVENTORY:
                 item_result = player.use(item, user=player, entities=entities, fov_map=fov_map, game_map=game_map, console=console)
-
                 # if item requires targeting, use targeting game state context
                 if item_result[0].get('requires_targeting'):
                     player.targeting_x = player.x
@@ -226,14 +216,10 @@ def main():
                 item_result = player.drop_item(item)
                 entities.append(item)
             elif game_state == GameStates.LOOTING:
-                for entity in entities:
-                    # if isinstance(entity, Item) and is_on_same_tile(player, entity):
-                    if entity.id == item.id:
-                        item_result = player.inventory.add_item(entity)
-                        # remove the entity from the entities list since the player has picked it up
-                        entities.remove(entity)
-                        player.stat_logger.log_loot()
-                        break
+                item_result = player.inventory.add_item(item)
+                # remove the entity from the entities list since the player has picked it up
+                entities.remove(item)
+                player.stat_logger.log_loot()
             player_turn_results.extend(item_result)
             TURN_COUNT += 1
 
@@ -252,9 +238,12 @@ def main():
             game_state = GameStates.CHECK_PLAYER_STATS
         if view_stats:
             game_state = GameStates.CHECK_CHAR_STATS
+
+        # drop enemy loot
+        # for result in 
         
 
-        next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, player.stat_logger)
+        next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, entities, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state
 
         if game_state == GameStates.ENEMY_TURN:
@@ -262,7 +251,7 @@ def main():
                 if isinstance(e, Enemy) and e.ai is not None and fov_map.is_in_fov(e.x, e.y):
                     enemy_turn_results = e.ai.take_turn(player, fov_map, game_map, entities)
 
-                    game_state = console.panel.message_log.parse_turn_results(enemy_turn_results)                    
+                    game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, entities)                    
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             # else:
