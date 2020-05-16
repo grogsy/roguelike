@@ -31,16 +31,12 @@ class Menu:
         y = header_height
         letter_index = ord('a')
         for opt in options:
-            if isinstance(opt, Entity):
-                name = opt.name
-                if isinstance(opt, Stackable):
-                    name = f"{name} x{opt.stack_count}" 
-            else:
-                name = opt
-            text = f"({chr(letter_index)}) {name}"
+            text = f"({chr(letter_index)}) {opt}"
+            x = 0
             if isinstance(opt, Item):
                 tcod.console_set_default_foreground(window, opt.color)
                 tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, opt.char)
+                x += 2
             tcod.console_set_default_foreground(window, tcod.white)
             tcod.console_print_ex(window, 2, y, tcod.BKGND_NONE, tcod.LEFT, text)
             y += 1

@@ -63,6 +63,9 @@ class Entity:
 
     def __repr__(self):
         return f"<{self.__class__.__name__} '{self.name}'({self.x},{self.y}){'(dead)' if self.render_order == RenderOrder.CORPSE else ''}>"
+    
+    def __str__(self):
+        return self.name
 
     def use(self, obj, target=None, **kwargs):
         '''
@@ -78,14 +81,13 @@ class Entity:
             elif item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
                 results.append({ 'requires_targeting': item })
             else:
-                # if isinstance(item, Scroll):
-                #     results.append({'message': Message(f"You read from the {item.name}.")})
                 results.extend(item.use_effect(**kwargs)) 
 
                 for item_use_result in results:
                     if item_use_result.get('consumed') and not isinstance(item, NonConsumable):
                         if isinstance(item, Stackable):
                             if isinstance(item, Throwable):
+                                # when you throw items and have the chance to retrieve some of them back
                                 unconsume_chance = random.randint(1, 10) <= 4
                                 if unconsume_chance or not unconsume_chance:
                                     x = item_use_result['landing_x']
@@ -152,6 +154,7 @@ class Enemy(Entity):
 
         self.ai = BasicMonster()
         self.ai.owner = self
+        self.soft_max_inventory = 3
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x
@@ -246,6 +249,9 @@ class Stackable(Item):
     def __init__(self, *args, stack_count=1, **kwargs):
         super().__init__(*args, **kwargs)
         self.stack_count = stack_count
+
+    def __str__(self):
+        return f"{self.name} x{self.stack_count}"
 
 class Throwable:
     def throw(self, *args, **kwargs):
