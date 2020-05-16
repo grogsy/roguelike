@@ -4,14 +4,17 @@ import tcod
 
 from .tile import Tile, Door, Tunnel
 from .rectangle import Rect
+
 from entity import Entity, Enemy, Item, Scroll, Potion
-# from components import Fighter, BasicMonster
+
 from components.fighter import Fighter
 from components.ai import BasicMonster
 from components.inventory import Inventory
+
 from game_state import RenderOrder
 from game_messages import Message
-import items
+
+from items.util import generate_item_at_coord, generate_enemy_inventory
 
 class GameMap:
     def __init__(self, width, height):
@@ -100,7 +103,7 @@ class GameMap:
                     for i in range(monster.soft_max_inventory):
                         loot_chance = randint(1, 10) < 3
                         if loot_chance:
-                            monster.inventory.append(Potion(0, 0, **items.potion_of_healing))
+                            monster.inventory.append(generate_enemy_inventory())
                 else:
                     # 20% chance for a troll to spawn
                     monster = Enemy(
@@ -112,7 +115,7 @@ class GameMap:
                     for i in range(monster.soft_max_inventory):
                         loot_chance = randint(1, 10) < 2
                         if loot_chance:
-                            monster.inventory.append(Scroll(0, 0, **items.potion_of_healing))
+                            monster.inventory.append(generate_enemy_inventory())
                 entities.append(monster)
 
         for i in range(number_of_items):
@@ -122,18 +125,7 @@ class GameMap:
             tile_is_occupied = any([e for e in entities if e.x == x and e.y == y])
 
             if not tile_is_occupied:
-                item_chance = randint(0, 100)
-                if item_chance < 50:
-                    item = Potion(x, y, **items.potion_of_healing)
-                elif item_chance < 62:
-                    item = Scroll(x, y, **items.scroll_of_fireball)
-                elif item_chance < 74:
-                    item = Scroll(x, y, **items.scroll_of_confuse_monster)
-                elif item_chance < 86:
-                    item = Scroll(x, y, **items.scroll_of_lightning)
-                else:
-                    item = Scroll(x, y, **items.scroll_of_strength)
-                entities.append(item)
+                entities.append(generate_item_at_coord(x, y))
 
     def place_item(self, x, y, **kwargs):
         item_chance = randint(0, 100)
