@@ -1,7 +1,7 @@
 import tcod
 from collections import defaultdict
 from game_messages import Message
-from entity import Stackable
+from entity import Stackable, Item
 
 class StackManager:
     '''
@@ -52,6 +52,10 @@ class Inventory:
                 })
 
         return results
+
+    def append(self, item):
+        assert isinstance(item, Item)
+        self.items.append(item)
 
     def remove_item(self, item):
         self.items.remove(item)

@@ -43,7 +43,7 @@ class MessageLog:
             tcod.console_print_ex(self.parent.console, self.x, y, tcod.BKGND_NONE, tcod.LEFT, message.text)
             y += 1
 
-    def parse_turn_results(self, results, player_logger=None):
+    def parse_turn_results(self, results, entities, player_logger=None):
         new_game_state = None
         for result in results:
             message                 = result.get('message')
@@ -67,6 +67,11 @@ class MessageLog:
                 else:
                     if player_logger:
                         player_logger.write_entry(dead_entity)
+                    while dead_entity.inventory.items:
+                        dropped_item = dead_entity.inventory.items.pop()
+                        dropped_item.x = dead_entity.x
+                        dropped_item.y = dead_entity.y
+                        entities.append(dropped_item)
                     damage_source = result.get('cause')
                     message = kill_monster(dead_entity, damage_source)
                 
