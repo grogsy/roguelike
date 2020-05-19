@@ -2,6 +2,8 @@ import tcod
 import textwrap
 from game_state import GameStates
 
+from util import drop_dead_entity_inventory
+
 class Message:
     def __init__(self, text, color=tcod.white):
         self.text = text
@@ -67,11 +69,12 @@ class MessageLog:
                 else:
                     if player_logger:
                         player_logger.write_entry(dead_entity)
-                    while dead_entity.inventory.items:
-                        dropped_item = dead_entity.inventory.items.pop()
-                        dropped_item.x = dead_entity.x
-                        dropped_item.y = dead_entity.y
-                        entities.append(dropped_item)
+                    # while dead_entity.inventory.items:
+                    #     dropped_item = dead_entity.inventory.items.pop()
+                    #     dropped_item.x = dead_entity.x
+                    #     dropped_item.y = dead_entity.y
+                    #     entities.append(dropped_item)
+                    drop_dead_entity_inventory(dead_entity, entities)
                     damage_source = result.get('cause')
                     message = kill_monster(dead_entity, damage_source)
                 
