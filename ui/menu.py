@@ -1,5 +1,8 @@
 import tcod
-from entity import Entity, Stackable, Item
+
+# from entity import Entity, Stackable, Item
+from entities.entity import Entity
+from entities.items import Item, Stackable
 
 class Menu:
     def __init__(self, parent, menu_width, header_label):
@@ -32,13 +35,18 @@ class Menu:
         letter_index = ord('a')
         for opt in options:
             text = f"({chr(letter_index)}) {opt}"
-            x = 0
-            if isinstance(opt, Item):
+            x_pos = 0
+            try:
                 tcod.console_set_default_foreground(window, opt.color)
-                tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, opt.char)
-                x += 2
+                tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, opt.char)
+                x_pos += 2
+            except AttributeError:
+                pass
+            # if isinstance(opt, Item):
+            #     tcod.console_set_default_foreground(window, opt.color)
+            #     tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, opt.char)
             tcod.console_set_default_foreground(window, tcod.white)
-            tcod.console_print_ex(window, 2, y, tcod.BKGND_NONE, tcod.LEFT, text)
+            tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, text)
             y += 1
             letter_index += 1
 

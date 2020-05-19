@@ -1,6 +1,8 @@
 import random
 from .items import *
-from entity import Potion, Scroll, Projectile, Book
+
+# from entity import Potion, Scroll, Projectile, Book
+from entities.items import Potion, Scroll, Projectile, Book, Guld
 
 def generate_item_at_coord(x, y):
     item_chance = random.randint(0, 100)
@@ -10,11 +12,13 @@ def generate_item_at_coord(x, y):
     # 25% for a throwing weapon
     #  8% for a spellbook
 
-    if item_chance < 33:
+    if item_chance < 25:
         item = generate_random_potion(x, y)
-    elif item_chance < 66:
+    elif item_chance < 50:
         item = generate_random_scroll(x, y)
-    elif item_chance < 92:
+    elif item_chance < 75:
+        item = generate_gold(x, y)
+    elif item_chance < 95:
         item = generate_random_projectile(x, y)
     else:
         item = generate_random_book(x, y)
@@ -77,4 +81,12 @@ def generate_enemy_inventory():
     '''
     placeholder function 
     '''
-    return Potion(0, 0, **potion_of_healing)
+    item_chance = random.randint(0, 100) 
+
+    if item_chance < 75:
+        return Guld(0, 0, stack_count=random.randint(1, 3))
+    else:
+        return Potion(0, 0, **potion_of_healing)
+
+def generate_gold(x, y):
+    return Guld(x, y, stack_count=random.randint(1, 30))

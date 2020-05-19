@@ -5,16 +5,8 @@ import tcod
 from .tile import Tile, Door, Tunnel
 from .rectangle import Rect
 
-from entity import Entity, Enemy, Item, Scroll, Potion
-
-from components.fighter import Fighter
-from components.ai import BasicMonster
-from components.inventory import Inventory
-
-from game_state import RenderOrder
-from game_messages import Message
-
-from items.util import generate_item_at_coord, generate_enemy_inventory
+from items.util import generate_item_at_coord
+from .util import place_enemy
 
 class GameMap:
     def __init__(self, width, height):
@@ -91,32 +83,7 @@ class GameMap:
             tile_is_occupied = any([e for e in entities if e.x == x and e.y == y])
 
             if not tile_is_occupied:
-                if randint(0, 100) < 80:
-                    # 80% chance for an orc to spawn
-                    monster = Enemy(
-                        x, y, 
-                        'o', tcod.desaturated_green, 'Orc',
-                        fighter=Fighter(hp=10, defense=0, power=3, accuracy=35),
-                        # just giving it a random inventory size
-                        inventory=Inventory(20)
-                    )
-                    for i in range(monster.soft_max_inventory):
-                        loot_chance = randint(1, 10) < 3
-                        if loot_chance:
-                            monster.inventory.append(generate_enemy_inventory())
-                else:
-                    # 20% chance for a troll to spawn
-                    monster = Enemy(
-                        x, y, 
-                        'T', tcod.darker_green, 'Troll',
-                        fighter=Fighter(hp=16, defense=1, power=4, accuracy=50),
-                        inventory=Inventory(20)
-                    )
-                    for i in range(monster.soft_max_inventory):
-                        loot_chance = randint(1, 10) < 2
-                        if loot_chance:
-                            monster.inventory.append(generate_enemy_inventory())
-                entities.append(monster)
+                place_enemy(x, y, entities)
 
         for i in range(number_of_items):
             x = randint(room.x1 + 1, room.x2 - 1)
@@ -127,19 +94,6 @@ class GameMap:
             if not tile_is_occupied:
                 entities.append(generate_item_at_coord(x, y))
 
-    def place_item(self, x, y, **kwargs):
-        item_chance = randint(0, 100)
-        if item_chance < 50:
-            self.place_potion(x, y)
-        else:
-            self.place_scroll(x, y)
-
-    def place_potion(self, x, y):
-        pass
-
-    def place_scroll(self, x, y):
-        pass
- 
     def create_tunnels(self, prev_room, new_room):
         new_x, new_y = new_room.center()
         prev_x, prev_y = prev_room.center()

@@ -7,7 +7,11 @@ from util import is_on_same_tile
 
 from input_handlers import handle_keys, handle_mouse
 
-from entity import Entity, Enemy, Item, get_blocking_entities_at_location
+# from entity import Entity, Enemy, Item, get_blocking_entities_at_location
+from entities.entity import Entity
+from entities.actors import Enemy
+from entities.items import Item
+from entities.util import get_blocking_entities_at_location
 
 from components.fighter import Fighter
 from components.inventory import Inventory
@@ -153,11 +157,12 @@ def main():
                                 'message': Message('You attempt to open the door, but it only budges slightly.', tcod.white)
                             })
             elif pickup:
-                items_on_same_tile = [entity for entity in entities if isinstance(entity, Item) and (entity.x == player.x and entity.y == player.y)]
+                items_on_same_tile = [entity for entity in entities if isinstance(entity, Item) and is_on_same_tile(entity, player)]
                 # if its just one item, forego having to display a looting menu
                 if len(items_on_same_tile) == 1:
                     item = items_on_same_tile[0]
-                    pickup_results = player.inventory.add_item(item)
+                    # pickup_results = player.inventory.add_item(item)
+                    pickup_results = player.loot(item)
                     entities.remove(item)
                     player_turn_results.extend(pickup_results)
                     player.stat_logger.log_loot()
@@ -182,7 +187,6 @@ def main():
                         target_x, target_y = player.targeting_x, player.targeting_y
                     item_result = player.use(targeting_item, user=player, entities=entities, fov_map=fov_map, target_x=target_x, target_y=target_y)
                     TURN_COUNT += 1
-                    print(TURN_COUNT)
                     player_turn_results.extend(item_result)
                 elif right_click:
                     player_turn_results.append({ 'targeting_cancelled': True })
@@ -202,9 +206,9 @@ def main():
             prev_game_state = game_state
             game_state = GameStates.DROP_INVENTORY
         # using/dropping/looting an item
-        if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context): #len(player.inventory.items):
+        if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context):
             item = console.inventory_context[selected_item]
-            if game_state == GameStates.SHOW_INVENTORY or game_state == GameStates.READABLE_INVENTORY or game_state == GameStates.THROWABLE_INVENTORY or game_state == GameStates.QUAFFABLE_INVENTORY:
+            if game_state in (GameStates.SHOW_INVENTORY, GameStates.READABLE_INVENTORY, GameStates.THROWABLE_INVENTORY, GameStates.QUAFFABLE_INVENTORY):
                 item_result = player.use(item, user=player, entities=entities, fov_map=fov_map, game_map=game_map, console=console)
                 # if item requires targeting, use targeting game state context
                 if item_result[0].get('requires_targeting'):
@@ -216,7 +220,7 @@ def main():
                 item_result = player.drop_item(item)
                 entities.append(item)
             elif game_state == GameStates.LOOTING:
-                item_result = player.inventory.add_item(item)
+                item_result = player.loot(item)
                 # remove the entity from the entities list since the player has picked it up
                 entities.remove(item)
                 player.stat_logger.log_loot()
@@ -239,23 +243,17 @@ def main():
         if view_stats:
             game_state = GameStates.CHECK_CHAR_STATS
 
-        # drop enemy loot
-        # for result in 
-        
-
         next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, entities, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state
 
         if game_state == GameStates.ENEMY_TURN:
-            for e in entities:
+            for e in entities:                                   # enemy turn only occurs when they are in player field-of-view
                 if isinstance(e, Enemy) and e.ai is not None and fov_map.is_in_fov(e.x, e.y):
                     enemy_turn_results = e.ai.take_turn(player, fov_map, game_map, entities)
 
                     game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, entities)                    
                     if game_state == GameStates.PLAYER_DEAD:
                         break
-            # else:
-            #     game_state = GameStates.PLAYER_TURN
             if game_state != GameStates.PLAYER_DEAD:
                 game_state = GameStates.PLAYER_TURN
 

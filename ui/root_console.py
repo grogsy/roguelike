@@ -2,8 +2,10 @@ import textwrap
 import tcod
 from map_objects import GameMap, Door
 from game_state import GameStates, RenderOrder
-from entity import Scroll, Item, Projectile, Readable, Potion
-# from menus import inventory_menu
+
+# from entity import Scroll, Item, Projectile, Readable, Potion, Stackable
+from entities.items import Item, Projectile, Readable, Potion, Stackable
+
 from .menu import Menu
 from .panel import Panel
 from .stats import StatsView
@@ -73,7 +75,7 @@ class RootConsole:
                 self.inventory_menu.header_label = 'Drink which item?'
                 self.inventory_context = [item for item in player.inventory.items if isinstance(item, Potion)]
             else:
-                self.inventory_context = [item for item in player.inventory.items]
+                self.inventory_context = player.inventory.items
             self.inventory_menu.render(self.inventory_context)
         if game_state == GameStates.CHECK_PLAYER_STATS:
             player.stat_logger.render()
@@ -92,9 +94,11 @@ class RootConsole:
         tcod.console_put_char(self.console, entity.x, entity.y, ' ', tcod.BKGND_NONE)
 
     def draw_entity(self, entity, fov_map):
-        if fov_map.is_in_fov(entity.x, entity.y):
-            tcod.console_set_default_foreground(self.console, entity.color)
-            tcod.console_put_char(self.console, entity.x, entity.y, entity.char, flag=tcod.BKGND_NONE)
+        if entity.x or entity.y:
+                
+            if fov_map.is_in_fov(entity.x, entity.y):
+                tcod.console_set_default_foreground(self.console, entity.color)
+                tcod.console_put_char(self.console, entity.x, entity.y, entity.char, flag=tcod.BKGND_NONE)
 
     def draw_map(self, game_map, fov_map):
         height = game_map.height
@@ -159,10 +163,9 @@ class RootConsole:
         names = []
         for entity in entities:
             if not entity.name == player.name and entity.x == player.x and entity.y == player.y:
-                lines = textwrap.wrap(f"Here lies {entity.name}", 35)
+                lines = textwrap.wrap(f"You see {entity}.", 35)
                 for line in lines:
                     names.append(line)
-                # names.append(f"Here lies {entity.name}")
 
         names = '\n'.join(names)
 

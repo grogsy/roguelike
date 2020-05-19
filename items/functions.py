@@ -1,7 +1,13 @@
 import random
 import tcod
 from game_messages import Message
-from entity import Entity, Enemy, Item, Scroll, Potion, Readable, get_blocking_entities_at_location
+
+# from entity import Entity, Enemy, Item, Scroll, Potion, Readable, get_blocking_entities_at_location
+from entities.entity import Entity
+from entities.items import Item, Potion, Readable
+from entities.util import get_blocking_entities_at_location
+from entities.actors import Enemy
+
 from components.ai import ConfusedMonster, SleepingMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
@@ -148,25 +154,21 @@ def cast_fireball(base_damage, radius, *args, **kwargs):
             elif isinstance(entity, Item):
                 destroyed_items.append(entity)
         
-        # this will be very slow. need to change this some time in the future
         for item in destroyed_items:
-            for i, entity in enumerate(entities):
-                if item.id == entity.id:
-                    if not fov_map.is_in_fov(item.x, item.y):
-                        results.append({
-                            'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
-                        })
-                    elif isinstance(item, Readable):
-                        results.append({
-                            'message': Message(f"The {item.name} crumbles into ashes!")
-                        })
-                    elif isinstance(item, Potion):
-                        results.append({
-                            'message': Message(f"The {item.name} bursts open and shatters!")
-                        })
+            if not fov_map.is_in_fov(item.x, item.y):
+                results.append({
+                    'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
+                })
+            elif isinstance(item, Readable):
+                results.append({
+                    'message': Message(f"The {item.name} crumbles into ashes!")
+                })
+            elif isinstance(item, Potion):
+                results.append({
+                    'message': Message(f"The {item.name} bursts open and shatters!")
+                })
 
-                    entities.pop(i)
-                    break
+            entities.remove(entity)
 
     return results
 
@@ -211,11 +213,6 @@ def reveal_floor(*args, **kwargs):
     fov_map     = kwargs.get('fov_map')
 
     results = []
-
-    # for room in game_map.rooms:
-    #     for x in range(room.x1, room.x2 + 1):
-    #         for y in range(room.y1, room.y2 + 1):
-    #             game_map.tiles[x][y].explored = True
     for x in range(game_map.width):
         for y in range(game_map.height):
             tile = game_map.tiles[x][y]
@@ -359,15 +356,14 @@ def cast_mass_sleep(radius, duration, *args, mana_cost=0, **kwargs):
     results = []
 
     for entity in entities:
-        if isinstance(entity, Enemy) and entity.distance(caster.x, caster.y) <= radius:
-            if entity.ai:
-                sleeping_ai = SleepingMonster(entity.ai, duration=duration)
-                sleeping_ai.owner = entity
-                entity.ai = sleeping_ai
+        if isinstance(entity, Enemy) and entity.ai and entity.distance(caster.x, caster.y) <= radius:
+            sleeping_ai = SleepingMonster(entity.ai, duration=duration)
+            sleeping_ai.owner = entity
+            entity.ai = sleeping_ai
 
-                results.append({
-                    'message': Message(f"The {entity.name} has fallen into a slumber.")
-                })
+            results.append({
+                'message': Message(f"The {entity.name} has fallen into a slumber.")
+            })
 
     caster.fighter.mana -= mana_cost
 

@@ -3,7 +3,9 @@ Simple playthrough statistics
 '''
 from collections import defaultdict
 import tcod
-from entity import Item, Enemy
+
+from entities.items import Item
+from entities.actors import Enemy
 
 class GameLog:
     def __init__(self, parent, width):
@@ -47,7 +49,7 @@ class GameLog:
             tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, title)
             y += 1
             for entity, value in log.items():
-                tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, f"{entity}: {value}")
+                tcod.console_print_ex(window, 3, y, tcod.BKGND_NONE, tcod.LEFT, f"{entity}: {value}")
                 y += 1
             tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, "\n")
             y += 1
