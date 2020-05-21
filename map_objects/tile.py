@@ -1,7 +1,5 @@
 import random
-
 import tcod
-
 from colors import Colors
 
 class Tile:
@@ -30,6 +28,9 @@ class Tile:
     def __repr__(self):
         return f"<{self.__class__.__name__} ({self.x}, {self.y})>"
 
+    def __str__(self):
+        return f"{self.__class__.__name__.lower()}"
+
     def render(self, console, in_fov=False):
         is_wall = self.block_sight
 
@@ -57,12 +58,19 @@ class Door(Tile):
         self.block_sight = True
         self.opened = False
         self.orientation = orientation
+        self.locked = False
 
-    def open(self):
+    def __str__(self):
+        return "door"
+
+    def open(self, fov_map):
         if random.randint(0, 1) == 1:
             self.blocked = False
             self.block_sight = False
             self.opened = True
+            fov_map.modify_fov_at_tile(self.x, self.y, transparent=True, walkable=True)
+        
+        return self.opened
 
     def render(self, console, in_fov=False):
         if not self.opened:

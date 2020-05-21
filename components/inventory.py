@@ -1,6 +1,5 @@
 import tcod
 from collections import defaultdict
-from game_messages import Message
 
 # from entity import Stackable, Item
 from entities.items import Item, Stackable, Guld

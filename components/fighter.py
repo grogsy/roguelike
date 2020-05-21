@@ -2,7 +2,7 @@ import random
 
 import tcod
 
-from game_messages import Message
+from game_messages import message
 
 class Buff:
     def __init__(self, effect, duration, expire_message, name):
@@ -77,12 +77,11 @@ class Fighter:
     def take_damage(self, amount, dmg_type='physical'):
         results = []
         self.hp -= amount
+        if self.owner.name != 'Player':
+            print(id(self.owner))
 
         if self.hp <= 0:
-            results.append({
-                'dead': self.owner,
-                'cause': dmg_type
-            })
+            results.append(message(dead=self.owner, cause=dmg_type))
 
         return results
 
@@ -116,19 +115,12 @@ class Fighter:
             damage = calculated_power - target.fighter.defense
 
             if damage > 0:
-                results.append({ 
-                    'message': Message(f"{self.owner.name} attacks {target.name} and deals {damage} damage.", tcod.white)
-                })
-
+                results.append(message(message=f"{self.owner.name} attacks {target.name} and deals {damage} damage."))
                 results.extend(target.fighter.take_damage(damage))
             else:
-                results.append({
-                    'message' : Message(f"{self.owner.name} attacks {target.name} but does not damage.", tcod.white)
-                })
+                results.append(message(message=f"{self.owner.name} attacks {target.name} but does not damage."))
         else:
-            results.append({
-                'message': Message(f"{self.owner.name} attacks {target.name}, but misses.", tcod.white)
-            })
+            results.append(message(message=f"{self.owner.name} attacks {target.name}, but misses."))
 
         results.extend(calculated_increased_attack_bonus['messages'])
             

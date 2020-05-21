@@ -1,73 +1,18 @@
-import random
-from queue import deque
-
 import tcod
-
-from util import is_on_same_tile
-
-from input_handlers import handle_keys, handle_mouse
-
-# from entity import Entity, Enemy, Item, get_blocking_entities_at_location
-from entities.entity import Entity
-from entities.actors import Enemy
-from entities.items import Item
-from entities.util import get_blocking_entities_at_location
-
-from components.fighter import Fighter
-from components.inventory import Inventory
-from map_objects import GameMap, Door
-
-from game_messages import Message, MessageLog
+from util import is_on_same_tile, handle_player_move, create_player, create_game_map, handle_player_pickup
+from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
+from entities.util import get_blocking_entities_at_location, is_enemy, is_alive
+from items.util import is_item
 from ui import RootConsole
-from colors import Colors
-
-from game_state import GameStates, RenderOrder
-from fov_functions import initialize_fov, recompute_fov, FOV_Map
-
+from game_state import GameStates
+from fov_functions import FOV_Map
 from log import GameLog
+
 from debug import generate_level, give_items
-
 from constants import INVENTORY_CONTEXT
+from saves import save_game, load_game
 
-def main():
-    screen_width = 100
-    screen_height = 70
-    
-    map_width = 100
-    map_height = 50
-
-    console = RootConsole('arial10x10.png', screen_width, screen_height, map_height)
-
-    # create some entities
-    player = Entity(
-        0, 0,
-        '@', Colors.player, 'Player', 
-        render_order=RenderOrder.ACTOR,
-        fighter=Fighter(hp=30, mana=30, defense=2, power=5, accuracy=100),
-        inventory=Inventory(capacity=26)
-    )
-    player.stat_logger = GameLog(parent=console, width=50)
-
-
-    # DEBUG
-    give_items(player)
-    
-    entities = [player]
-
-    # a possible refactorization of the entities container.
-    # this would be useful if picking up items off the ground for example.
-    # we can access items by way of their id.
-    # deleting a specific entry for an item can be done as del entities['items'][item.id]
-    # entities = {
-    #     'sentients': {},
-    #     'items': {}
-    # }
-
-    # initialize a game map object
-    game_map = GameMap(map_width, map_height)
-    game_map.make_map(player, entities)
-
-    # initialize field-of-view map
+def play(console, player, entities, game_map, game_state):
     fov_map = FOV_Map(game_map)
 
     # initialize input objects
@@ -125,49 +70,15 @@ def main():
 
         if game_state == GameStates.PLAYER_TURN:
             if move:
-                dx, dy = move
-                dst_x = player.x + dx
-                dst_y = player.y + dy
+                player_turn_results.extend(handle_player_move(player, move, entities, game_map, fov_map))
 
-                target = get_blocking_entities_at_location(entities, dst_x, dst_y)
-
-                if target or not game_map.is_blocked_by_tiling(dst_x, dst_y):
-                    if target and isinstance(target, Enemy):
-                        attack_results = player.fighter.attack(target)
-                        player_turn_results.extend(attack_results)
-                    elif target is None:
-                        player.move(dx, dy)
-                        fov_map.recompute = True
-
-                    # plan to move this after door check, because considering door opening to consume a turn
-                    player_turn_results.extend(player.update_buff_counter())
-                    player.update_mana_regen(TURN_COUNT)
-                    game_state = GameStates.ENEMY_TURN
-                    TURN_COUNT += 1
-                
-                elif isinstance(game_map.tiles[dst_x][dst_y], Door):
-                    door = game_map.tiles[dst_x][dst_y]
-                    if not door.opened:
-                        door.open()
-                        if door.opened:
-                            fov_map.modify_fov_at_tile(dst_x, dst_y, transparent=True, walkable=True)
-                            player_turn_results.append({ 'message': Message('You open the door.', tcod.white) })
-                        else:
-                            player_turn_results.append({ 
-                                'message': Message('You attempt to open the door, but it only budges slightly.', tcod.white)
-                            })
+                # update buff states
+                player_turn_results.extend(player.update_buff_counter())
+                player.update_mana_regen(TURN_COUNT)
+                game_state = GameStates.ENEMY_TURN
+                TURN_COUNT += 1
             elif pickup:
-                items_on_same_tile = [entity for entity in entities if isinstance(entity, Item) and is_on_same_tile(entity, player)]
-                # if its just one item, forego having to display a looting menu
-                if len(items_on_same_tile) == 1:
-                    item = items_on_same_tile[0]
-                    # pickup_results = player.inventory.add_item(item)
-                    pickup_results = player.loot(item)
-                    entities.remove(item)
-                    player_turn_results.extend(pickup_results)
-                    player.stat_logger.log_loot()
-                else:
-                    game_state = GameStates.LOOTING
+                player_turn_results.extend(handle_player_pickup(player, entities))
 
         if game_state == GameStates.TARGETING:
             if targeting_item.use_effect.directional_targeting:
@@ -190,20 +101,15 @@ def main():
                     player_turn_results.extend(item_result)
                 elif right_click:
                     player_turn_results.append({ 'targeting_cancelled': True })
-        if game_state != GameStates.READABLE_INVENTORY and select_readable:
-            prev_game_state = game_state
+        if select_readable:
             game_state = GameStates.READABLE_INVENTORY
-        if game_state != GameStates.QUAFFABLE_INVENTORY and select_quaffable:
-            prev_game = game_state
+        if select_quaffable:
             game_state = GameStates.QUAFFABLE_INVENTORY
-        if game_state != GameStates.THROWABLE_INVENTORY and select_projectile:
-            prev_game_state = game_state
+        if select_projectile:
             game_state = GameStates.THROWABLE_INVENTORY
-        if game_state != GameStates.SHOW_INVENTORY and show_inventory:
-            prev_game_state = game_state
+        if show_inventory:
             game_state = GameStates.SHOW_INVENTORY
-        if game_state != GameStates.DROP_INVENTORY and drop_inventory:
-            prev_game_state = game_state
+        if drop_inventory:
             game_state = GameStates.DROP_INVENTORY
         # using/dropping/looting an item
         if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context):
@@ -229,12 +135,13 @@ def main():
 
         if exit:
             if game_state in INVENTORY_CONTEXT:
-                game_state = prev_game_state
+                game_state = GameStates.PLAYER_TURN
             elif game_state == GameStates.TARGETING:
                 player_turn_results.append({ 'targeting_cancelled': True })
             elif game_state in (GameStates.CHECK_PLAYER_STATS, GameStates.CHECK_CHAR_STATS):
                 game_state = GameStates.PLAYER_TURN
             else:
+                save_game(player, entities, game_map, console.panel.message_log, game_state)
                 return True
         if fullscreen:
             tcod.console_set_fullscreen(not tcod.console_is_fullscreen())
@@ -248,7 +155,7 @@ def main():
 
         if game_state == GameStates.ENEMY_TURN:
             for e in entities:                                   # enemy turn only occurs when they are in player field-of-view
-                if isinstance(e, Enemy) and e.ai is not None and fov_map.is_in_fov(e.x, e.y):
+                if is_alive(e) and is_enemy(e) and fov_map.is_in_fov(e.x, e.y):
                     enemy_turn_results = e.ai.take_turn(player, fov_map, game_map, entities)
 
                     game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, entities)                    
@@ -275,6 +182,83 @@ def main():
             fov_map.recompute = True
 
             player.stat_logger.log_travel()
+
+def main():
+    screen_width = 100
+    screen_height = 70
+    
+    map_width = 100
+    map_height = 50
+    
+    console = RootConsole('arial10x10.png', screen_width, screen_height, map_height)
+
+    player = None
+    entities = []
+    game_map = None
+    message_log = None
+    game_state = None
+
+    show_main_menu = True
+    show_load_error_message = False
+
+    key = tcod.Key()
+    mouse = tcod.Mouse()
+
+    while not tcod.console_is_window_closed():
+        tcod.sys_check_for_event(tcod.EVENT_KEY_PRESS | tcod.EVENT_MOUSE, key, mouse)
+
+        if show_main_menu:
+            console.main_menu.render(['New Game', 'Load Save', 'Quit'])
+
+            if show_load_error_message:
+                print("Error occured and this ran (show load error message)")
+                return 1
+
+            tcod.console_flush()
+
+            action = handle_main_menu_keys(key)
+
+            new_game = action.get('new_game')
+            load_saved_game = action.get('load_game')
+            exit_game = action.get('exit')
+
+            if show_load_error_message and (new_game or load_saved_game or exit_game):
+                show_load_error_message = False
+            elif new_game:
+                player = create_player()
+                player.stat_logger = GameLog(parent=console, width=50)
+
+                # DEBUG
+                give_items(player)
+                
+                entities = [player]
+
+                # initialize a game map object
+                game_map = create_game_map(map_width, map_height, player, entities)
+                game_state = GameStates.PLAYER_TURN
+
+                show_main_menu = False
+            elif load_saved_game:
+                try:
+                    data = load_game()
+                    player = data.get('player')
+                    entities = data.get('entities')
+                    game_map = data.get('game_map')
+
+                    # message log probably needs to get refactored
+                    message_log = data.get('message_log')
+                    message_log.parent = console.panel
+                    console.panel.message_log = message_log
+
+                    game_state = data.get('game_state')
+                    show_main_menu = False
+                except FileNotFoundError:
+                    show_load_error_message = True
+            elif exit_game:
+                break
+        else:
+            console.clear()
+            return play(console, player, entities, game_map, game_state)
 
 if __name__ == '__main__':
     main()

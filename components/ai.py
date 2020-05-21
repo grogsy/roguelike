@@ -1,6 +1,6 @@
 import tcod
 import random
-from game_messages import Message
+from game_messages import message
 
 class BasicMonster:
     '''
@@ -37,9 +37,7 @@ class ConfusedMonster:
             self.number_of_turns -= 1
         else:
             self.owner.ai = self.prev_ai
-            results.append({
-                'message': Message(f"The {self.owner.name} is no longer confused.")
-            })
+            results.append(message(message=f"The {self.owner.name} is not longer confused."))
 
         return results
 
@@ -52,10 +50,7 @@ class SleepingMonster:
         results = []
         if self.duration <= 0:
             self.owner.ai = self.prev_ai
-
-            results.append({
-                'message': Message(f"The {self.owner.name} has woken up!", tcod.orange)
-            })
+            results.append(message(message=f"The {self.owner.name} has woken up!", color=tcod.orange))
         else:
             self.duration -= 1
 

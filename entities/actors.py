@@ -6,19 +6,85 @@ from .util import get_blocking_entities_at_location
 
 from components.ai import BasicMonster
 from game_state import RenderOrder
+from game_messages import message
+
+class Actor(Entity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, render_order=RenderOrder.ACTOR, **kwargs)
+        self.hostile = False
+
+    def update_mana_regen(self, turn_count):
+        self.fighter.update_mana_regen(turn_count)
+
+class Player(Actor):
+
+    def use(self, obj, target=None, **kwargs):
+        '''
+        obj param should support more than just items(possibly different entities)
+        target param should support more than just entities(it should support locations on the map as well).
+        '''
+        results = []
+        item = obj
+        # notify that the item requires targeting
+        if item.use_effect.directional_targeting and not (kwargs.get('dx') or kwargs.get('dy')):
+            results.append(message(requires_targeting=item))
+        # requires point-and-click targeting
+        elif item.use_effect.requires_target and not (kwargs.get('target_x') or kwargs.get('target_y')):
+            results.append(message(requires_targeting=item))
+        else:
+            results.extend(item.use(**kwargs)) 
+            self.stat_logger.write_entry(item)
+
+        return results
+
+    def loot(self, item):
+        results = []
+
+        if len(self.inventory) >= self.inventory.capacity:
+            results.append(message(item_added=None, message="You cannot carry any more, your inventory is full.", color=tcod.yellow))
+        else:
+            self.inventory.add_item(item)
+            results.append(message(item_added=item, message=f"You pick up the {item}."))
+
+        return results
+
+    def remove_item(self, item):
+        self.inventory.remove_item(item)
+
+    def drop_item(self, item):
+        results = []
+
+        item.x = self.x
+        item.y = self.y
+
+        self.remove_item(item)
+
+        results.append(message(source=self.name, item_dropped=item, message=f"You drop the {item.name}", color=tcod.yellow))
+
+        return results
+
+    def open(self, obj, *args, **kwargs):
+        results = []
+        if obj.locked:
+            msg = f"That {obj} is locked."
+        elif obj.open(*args, **kwargs):
+            msg = f"You open the {obj}."
+        else:
+            msg = f"You attempt to open the {obj}, but it only budges slightly."
+
+        results.append(message(message=msg))
+
+        return []
 
 
-class Player(Entity):
+class Enemy(Actor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-class Enemy(Entity):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, render_order=RenderOrder.ACTOR)
 
         self.ai = BasicMonster()
         self.ai.owner = self
         self.soft_max_inventory = 3
+        self.hostile = True
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x

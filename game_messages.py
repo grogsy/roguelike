@@ -2,7 +2,7 @@ import tcod
 import textwrap
 from game_state import GameStates
 
-from util import drop_dead_entity_inventory
+from entities.util import drop_dead_entity_inventory
 
 class Message:
     def __init__(self, text, color=tcod.white):
@@ -48,6 +48,7 @@ class MessageLog:
     def parse_turn_results(self, results, entities, player_logger=None):
         new_game_state = None
         for result in results:
+            print(result)
             message                 = result.get('message')
             dead_entity             = result.get('dead')
             item_added              = result.get('item_added')
@@ -55,6 +56,7 @@ class MessageLog:
             item_dropped            = result.get('item_dropped')
             targeting               = result.get('requires_targeting')
             targeting_cancelled     = result.get('targeting_cancelled')
+            player_looting          = result.get('player_looting')
 
             if message:
                 self.add_message(message)
@@ -69,11 +71,6 @@ class MessageLog:
                 else:
                     if player_logger:
                         player_logger.write_entry(dead_entity)
-                    # while dead_entity.inventory.items:
-                    #     dropped_item = dead_entity.inventory.items.pop()
-                    #     dropped_item.x = dead_entity.x
-                    #     dropped_item.y = dead_entity.y
-                    #     entities.append(dropped_item)
                     drop_dead_entity_inventory(dead_entity, entities)
                     damage_source = result.get('cause')
                     message = kill_monster(dead_entity, damage_source)
@@ -81,10 +78,36 @@ class MessageLog:
                 self.add_message(message)
             if new_game_state == GameStates.PLAYER_DEAD:
                 break
-            elif item_added:
+            if item_added:
                 new_game_state = GameStates.ENEMY_TURN
+            if player_looting:
+                new_game_state = GameStates.LOOTING
             if item_consumed or item_dropped: 
                 if result.get('source') == 'Player':
                     new_game_state = GameStates.ENEMY_TURN
+            
 
         return new_game_state
+
+def message(*args, **kwargs):
+    '''
+    An implementation of message passing that is intended to be as flexible 
+    as possible. It supports arguments dynamically by returning the kwargs as
+    a dictionary.
+
+    kwargs -> A n-amount of user supplied keyword arguments used by the
+              message parser defined in game_messages.py.
+
+                message - > A message keyword can be supplied to this function
+                            to indicate plaintext to display to the console.
+                            As such, the value of message is expected to be a
+                            string, and this function will convert it into a 
+                            Message() object.
+    '''
+    msg = kwargs.pop('message', None)
+    if msg is not None:
+        msg_color = kwargs.pop('color', tcod.white)
+        msg = Message(msg, msg_color)
+        kwargs['message'] = msg
+
+    return kwargs

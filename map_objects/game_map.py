@@ -2,11 +2,11 @@ from random import randint
 
 import tcod
 
-from .tile import Tile, Door, Tunnel
+from .tile import Tile, Tunnel
 from .rectangle import Rect
 
 from items.util import generate_item_at_coord
-from .util import place_enemy
+from .util import place_enemy, is_door, create_door
 
 class GameMap:
     def __init__(self, width, height):
@@ -124,7 +124,7 @@ class GameMap:
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
 
-            if self.is_tile_a_tunnel(x, y):
+            if self.is_valid_tunnel(x, y):
                 self.tiles[x][y] = Tunnel(False, x, y)
     
 
@@ -136,7 +136,7 @@ class GameMap:
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
 
-            if self.is_tile_a_tunnel(x, y):
+            if self.is_valid_tunnel(x, y):
                 self.tiles[x][y] = Tunnel(False, x, y)
 
     def is_blocked_by_tiling(self, x, y):
@@ -149,7 +149,7 @@ class GameMap:
 
         return False
 
-    def is_tile_a_tunnel(self, x, y):
+    def is_valid_tunnel(self, x, y):
         '''
         Return True if the tile at x, y does not provide free adjacent walking space.
         '''
@@ -175,7 +175,7 @@ class GameMap:
         for y in range(self.height):
             for x in range(self.width):
                 tile = self.tiles[x][y]
-                if isinstance(tile, Tunnel) and not self.is_tile_a_tunnel(x, y):
+                if isinstance(tile, Tunnel) and not self.is_valid_tunnel(x, y):
                     self.tiles[x][y] = Tile(False, x, y)
 
     def place_doors(self):
@@ -198,9 +198,9 @@ class GameMap:
             (x + 1, y, 'v'), (x - 1, y, 'v')
         ):
             tile = self.tiles[x][y]
-            if isinstance(tile, Tunnel) and not isinstance(tile, Door):
+            if isinstance(tile, Tunnel) and not is_door(tile):
                 self.roll_for_door(x, y, orientation)
 
     def roll_for_door(self, x, y, orientation):
         if randint(0, 1) == 1:
-            self.tiles[x][y] = Door(orientation, True, x, y)
+            create_door(self, x, y, orientation)

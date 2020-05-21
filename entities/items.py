@@ -6,7 +6,7 @@ from uuid import uuid4
 from .entity import Entity
 from .util import entity_on_tile, is_same_entity_name
 
-from game_messages import Message
+from game_messages import message
 from game_state import RenderOrder
 
 class Item(Entity):
@@ -24,7 +24,7 @@ class Item(Entity):
 class Readable:
     def use(self, *args, **kwargs):
         results = []
-        results.append({'message': Message(f"You read from the {self.name}.")})
+        results.append(message(message=f"You read from the {self.name}."))
         results.extend(super().use(*args, **kwargs))
 
         return results
@@ -56,7 +56,8 @@ class Stackable(Item):
 
 class Throwable:
     def use(self, *args, **kwargs):
-        results = [{'message': Message(f"You throw the {self.name}")}]
+        # TODO complete this method
+        results = [message(message=f"You throw the {self.name}")]
         results.extend(super().use(*args, **kwargs))
 
         return results
@@ -64,7 +65,7 @@ class Throwable:
 class Projectile(Throwable, Stackable):
     def use(self, *args, **kwargs):
         owner = kwargs.get('user')
-        results = [{'message': Message(f"You throw the {self.name}.")}]
+        results = [message(message=f"You throw the {self.name}.")]
         results.extend(self.use_effect(*args, source=self, **kwargs))
         for res in results:
             if res.get('consumed'):
@@ -104,7 +105,7 @@ class Guld(Stackable):
         super().__init__(*args, **kwargs, name='Guld', char='$', color=tcod.gold, use_effect=None)
     def use(self, *args, **kwargs):
         return [
-            {'message', Message("You cannot use money this way.")}
+           message(message="You cannot use money this way.") 
         ]
 
     def __str__(self):

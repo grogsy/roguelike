@@ -42,9 +42,6 @@ class Menu:
                 x_pos += 2
             except AttributeError:
                 pass
-            # if isinstance(opt, Item):
-            #     tcod.console_set_default_foreground(window, opt.color)
-            #     tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, opt.char)
             tcod.console_set_default_foreground(window, tcod.white)
             tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, text)
             y += 1

@@ -2,7 +2,6 @@ import random
 import tcod
 from game_messages import Message
 
-# from entity import Entity, Enemy, Item, Scroll, Potion, Readable, get_blocking_entities_at_location
 from entities.entity import Entity
 from entities.items import Item, Potion, Readable
 from entities.util import get_blocking_entities_at_location
@@ -11,7 +10,6 @@ from entities.actors import Enemy
 from components.ai import ConfusedMonster, SleepingMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
-from util import get_entity_at_coord
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')

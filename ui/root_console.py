@@ -1,9 +1,7 @@
 import textwrap
 import tcod
-from map_objects import GameMap, Door
 from game_state import GameStates, RenderOrder
 
-# from entity import Scroll, Item, Projectile, Readable, Potion, Stackable
 from entities.items import Item, Projectile, Readable, Potion, Stackable
 
 from .menu import Menu
@@ -13,6 +11,8 @@ from game_messages import MessageLog
 
 from constants import INVENTORY_CONTEXT
 from util import is_on_same_tile
+
+from map_objects.util import is_door
 
 class RootConsole:
     '''
@@ -40,9 +40,16 @@ class RootConsole:
             menu_width=50,
             header_label="Inventory"
         )
+        self.main_menu = Menu(
+            parent=self,
+            menu_width=50,
+            header_label='Home'
+        )
+
+
         self.stats_view = StatsView(parent=self, width=50)
 
-    def render_all(self, player, entities, game_map, fov_map, mouse_event, game_state):
+    def render_all(self, player, entities, game_map, fov_map, mouse_event, game_state): #, message_log):
         self.draw_map(game_map, fov_map)
 
         if game_state == GameStates.TARGETING:
@@ -54,7 +61,7 @@ class RootConsole:
 
         tcod.console_blit(self.console, 0, 0, self.width, self.height, 0, 0, 0)
 
-        self.panel.render(player, entities, game_map, fov_map, mouse_event)
+        self.panel.render(player, entities, game_map, fov_map, mouse_event) #, message_log)
 
 
         if game_state in INVENTORY_CONTEXT:
@@ -148,7 +155,7 @@ class RootConsole:
         for y in range(height):
             for x in range(width):
                 tile = game_map.tiles[x][y]
-                if tile.explored and tile.x == mouse_event.cx and tile.y == mouse_event.cy and isinstance(tile, Door):
+                if tile.explored and tile.x == mouse_event.cx and tile.y == mouse_event.cy and is_door(tile):
                     if tile.opened:
                         door_status = "an open"
                     else:
@@ -170,3 +177,6 @@ class RootConsole:
         names = '\n'.join(names)
 
         return names
+
+    def clear(self):
+        tcod.console_clear(self.console)

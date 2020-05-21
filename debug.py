@@ -2,8 +2,10 @@ import random
 import tcod
 from fov_functions import initialize_fov
 
-from entity import Scroll, Potion, Projectile
-import items
+# from entity import Scroll, Potion, Projectile, Book
+from entities.items import Scroll, Potion, Projectile, Book, Guld
+
+from items import items
 
 def label_rooms(console, game_map):
     for i, room in enumerate(game_map.rooms):
@@ -26,10 +28,16 @@ def print_player_status(player):
     print(f"Player health: {player.fighter.hp}/{player.fighter.max_hp}")
 
 def give_items(player):
-    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_fireball))
-    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_lightning))
-    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_confuse_monster))
-    player.inventory.add_item(Potion(0, 0, **items.potion_of_healing))
-    player.inventory.add_item(Scroll(0, 0, **items.scroll_of_strength))
-    player.inventory.add_item(Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_knife))
-    player.inventory.add_item(Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_dagger))
+    player.inventory.items.append((Potion(0, 0, **items.potion_of_healing)))
+    player.inventory.items.append((Potion(0, 0, **items.potion_of_mana)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_fireball)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_lightning)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_confuse_monster)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_strength)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_magic_mapping)))
+    player.inventory.items.append((Scroll(0, 0, **items.scroll_of_teleport)))
+    player.inventory.items.append((Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_knife)))
+    player.inventory.items.append((Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_dagger)))
+    player.inventory.items.append((Book(0, 0, **items.magic_missile_book)))
+    player.inventory.items.append((Book(0, 0, **items.aoe_sleep_book)))
+    # player.inventory.add_item(Guld(0, 0, stack_count=random.randint(30, 1500)))

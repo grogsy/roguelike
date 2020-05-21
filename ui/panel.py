@@ -50,14 +50,27 @@ class Panel:
         tcod.console_set_default_foreground(self.console, tcod.light_gray)
         tcod.console_print_ex(self.console, self.width - 35, 1, tcod.BKGND_NONE, tcod.LEFT, names)
 
-    def render(self, player, entities, game_map, fov_map, mouse_event):
+    def render(self, player, entities, game_map, fov_map, mouse_event): #, message_log):
         self.clear()
 
+        # message_log.render()
         self.message_log.render()
         names = self.parent.get_entities_at_mouse_cursor(mouse_event, entities, fov_map, game_map)
         names += self.parent.get_entities_at_player_location(player, entities)
         self.display_names(names)
         self.health_bar.render(1, 1, player.fighter.hp, player.fighter.max_hp)
         self.mana_bar.render(1, 2, player.fighter.mana, player.fighter.max_mana)
+
+        # below is experimental
+        tcod.console_set_default_foreground(self.console, tcod.gold)
+        money = f"$:{player.inventory.guld:05}"
+        tcod.console_print_ex(self.console, 1, 4, tcod.BKGND_NONE, tcod.LEFT, money)
+
+        tcod.console_set_default_foreground(self.console, tcod.white)
+        player_level = f"LVL:{player.level:02}"
+        tcod.console_print_ex(self.console, 1, 5, tcod.BKGND_NONE, tcod.LEFT, player_level)
+        player_def = f"DEF:{player.fighter.defense:02}"
+        tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_def)
+        # above is experimental
 
         self.console_blit()
