@@ -1,5 +1,6 @@
 from random import randint
 import tcod
+from entities.inanimate import create_chest
 from enemies import create_enemy
 
 from .tile import Door, Tunnel
@@ -13,6 +14,9 @@ def place_enemy(x, y, entities):
         enemy = create_enemy('troll', x, y, loot_chance=5)
 
     entities.append(enemy)
+
+def place_chest(x, y, entities):
+    entities.append(create_chest(x, y))
 
 def is_door(tile):
     return isinstance(tile, Door)

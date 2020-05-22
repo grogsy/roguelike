@@ -6,7 +6,7 @@ from .tile import Tile, Tunnel
 from .rectangle import Rect
 
 from items.util import generate_item_at_coord
-from .util import place_enemy, is_door, create_door
+from .util import place_enemy, is_door, create_door, place_chest
 
 class GameMap:
     def __init__(self, width, height):
@@ -49,6 +49,7 @@ class GameMap:
                 self.create_room(new_room)
                 if not rooms:
                     self.place_player(new_room, player)
+                    place_chest(player.x + 1, player.y + 1, entities)
                 else:
                     previous_room = rooms[-1]
                     self.create_tunnels(previous_room, new_room)

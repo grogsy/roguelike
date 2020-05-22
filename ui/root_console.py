@@ -2,14 +2,16 @@ import textwrap
 import tcod
 from game_state import GameStates, RenderOrder
 
-from entities.items import Item, Projectile, Readable, Potion, Stackable
+from entities.items import Projectile, Readable, Potion, Stackable
+from entities.inanimate import is_container
 
 from .menu import Menu
 from .panel import Panel
 from .stats import StatsView
-from game_messages import MessageLog
 
 from constants import INVENTORY_CONTEXT
+
+from items.util import is_item
 from util import is_on_same_tile
 
 from map_objects.util import is_door
@@ -63,33 +65,10 @@ class RootConsole:
 
         self.panel.render(player, entities, game_map, fov_map, mouse_event) #, message_log)
 
-
-        if game_state in INVENTORY_CONTEXT:
-            if game_state == GameStates.SHOW_INVENTORY:
-                self.inventory_menu.header_label = 'Inventory'
-            elif game_state == GameStates.DROP_INVENTORY:
-                self.inventory_menu.header_label = 'Drop which item?'
-            if game_state == GameStates.READABLE_INVENTORY:
-                self.inventory_menu.header_label = 'Read which item?'
-                self.inventory_context = [item for item in player.inventory.items if isinstance(item, Readable)]
-            elif game_state == GameStates.LOOTING:
-                self.inventory_menu.header_label = 'Pick up which item?'
-                self.inventory_context = [item for item in entities if isinstance(item, Item) and is_on_same_tile(player, item)]
-            elif game_state == GameStates.THROWABLE_INVENTORY:
-                self.inventory_menu.header_label = 'Throw which item?'
-                self.inventory_context = [item for item in player.inventory.items if isinstance(item, Projectile)]
-            elif game_state == GameStates.QUAFFABLE_INVENTORY:
-                self.inventory_menu.header_label = 'Drink which item?'
-                self.inventory_context = [item for item in player.inventory.items if isinstance(item, Potion)]
-            else:
-                self.inventory_context = player.inventory.items
-            self.inventory_menu.render(self.inventory_context)
         if game_state == GameStates.CHECK_PLAYER_STATS:
             player.stat_logger.render()
         if game_state == GameStates.CHECK_CHAR_STATS:
             self.stats_view.render(player)
-
-        tcod.console_flush()
 
     def clear_all(self, entities, game_map, game_state):
         for entity in entities:
@@ -180,3 +159,33 @@ class RootConsole:
 
     def clear(self):
         tcod.console_clear(self.console)
+
+    def flush(self):
+        tcod.console_flush()
+
+    def render_inventory(self, player, entities, game_state, *args, **kwargs):
+        if game_state == GameStates.SHOW_INVENTORY:
+            self.inventory_menu.header_label = 'Inventory'
+        elif game_state == GameStates.DROP_INVENTORY:
+            self.inventory_menu.header_label = 'Drop which item?'
+        if game_state == GameStates.READABLE_INVENTORY:
+            self.inventory_menu.header_label = 'Read which item?'
+            self.inventory_context = [item for item in player.inventory.items if isinstance(item, Readable)]
+        elif game_state == GameStates.LOOTING:
+            container = kwargs.get('container')
+            if container:
+                self.inventory_menu.header_label = f"What do you want to retrieve from the {container.name}?"
+                self.inventory_context = container.inventory.items
+            else:
+                self.inventory_menu.header_label = 'Pick up which item?'
+                self.inventory_context = [item for item in entities if is_item(item) and is_on_same_tile(player, item)]
+        elif game_state == GameStates.THROWABLE_INVENTORY:
+            self.inventory_menu.header_label = 'Throw which item?'
+            self.inventory_context = [item for item in player.inventory.items if isinstance(item, Projectile)]
+        elif game_state == GameStates.QUAFFABLE_INVENTORY:
+            self.inventory_menu.header_label = 'Drink which item?'
+            self.inventory_context = [item for item in player.inventory.items if isinstance(item, Potion)]
+        else:
+            self.inventory_context = player.inventory.items
+            
+        self.inventory_menu.render(self.inventory_context)

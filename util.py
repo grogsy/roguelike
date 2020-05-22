@@ -1,4 +1,5 @@
 from entities.actors import Player
+from entities.inanimate import is_container
 from entities.util import get_blocking_entities_at_location, is_enemy
 
 from map_objects.util import is_door
@@ -57,9 +58,15 @@ def handle_player_pickup(player, entities):
     results = []
 
     items_on_same_tile = [entity for entity in entities if is_item(entity) and is_on_same_tile(entity, player)]
-    # if its just one item, forego having to display a looting menu
     if not items_on_same_tile:
-        results.append(message(message="There is nothing here to pick up."))
+        # if there are not items on the ground, maybe there's a container?
+        for entity in entities:
+            if is_container(entity) and is_on_same_tile(entity, player):
+                results.append(message(player_looting=True, looting_container=True, source=entity))
+                break
+        else:
+            results.append(message(message="There is nothing here to pick up."))
+    # if its just one item, forego having to display a looting menu
     elif len(items_on_same_tile) == 1:
         item = items_on_same_tile[0]
         pickup_results = player.loot(item)
@@ -67,7 +74,7 @@ def handle_player_pickup(player, entities):
         results.extend(pickup_results)
         player.stat_logger.log_loot()
     else:
-        results.append(message(player_looting=True))
+        results.append(message(player_looting=True, source=f"Ground({player.x}, {player.y})"))
 
     return results
 

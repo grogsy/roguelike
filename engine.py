@@ -24,6 +24,7 @@ def play(console, player, entities, game_map, game_state):
     prev_game_state = game_state
 
     targeting_item = None
+    looting_container = None
     player.targeting_x = 0
     player.targeting_y = 0
 
@@ -37,6 +38,11 @@ def play(console, player, entities, game_map, game_state):
             fov_map.recompute_fov(player.x, player.y)
 
         console.render_all(player, entities, game_map, fov_map, mouse, game_state)
+
+        if game_state in INVENTORY_CONTEXT:
+            console.render_inventory(player, entities, game_state, container=looting_container)
+
+        console.flush()
 
         # field-of-view only needs to be re-rendered if player character is moving
         fov_map.recompute = False
@@ -78,7 +84,13 @@ def play(console, player, entities, game_map, game_state):
                 game_state = GameStates.ENEMY_TURN
                 TURN_COUNT += 1
             elif pickup:
-                player_turn_results.extend(handle_player_pickup(player, entities))
+                pick_up_results = handle_player_pickup(player, entities)
+                for result in pick_up_results:
+                    if result.get('looting_container') and result.get('source') is not None:
+                        looting_container = result.get('source')
+                        break
+                player_turn_results.extend(pick_up_results)
+
 
         if game_state == GameStates.TARGETING:
             if targeting_item.use_effect.directional_targeting:
@@ -127,8 +139,12 @@ def play(console, player, entities, game_map, game_state):
                 entities.append(item)
             elif game_state == GameStates.LOOTING:
                 item_result = player.loot(item)
-                # remove the entity from the entities list since the player has picked it up
-                entities.remove(item)
+                if looting_container:
+                    looting_container.remove_item(item)
+                    looting_container = None
+                else:
+                    # remove the entity from the entities list since the player has picked it up
+                    entities.remove(item)
                 player.stat_logger.log_loot()
             player_turn_results.extend(item_result)
             TURN_COUNT += 1

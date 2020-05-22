@@ -81,3 +81,6 @@ def generate_random_book(x=0, y=0):
 
 def generate_gold(x=0, y=0, min_amount=1, max_amount=30):
     return Guld(x, y, stack_count=random.randint(min_amount, max_amount))
+
+def generate_random_item():
+    return random.choice([generate_random_projectile(), generate_random_scroll(), generate_random_potion(), generate_gold()])
