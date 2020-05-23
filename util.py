@@ -78,6 +78,36 @@ def handle_player_pickup(player, entities):
 
     return results
 
+def handle_player_targeting(player, targeting_item, *args, **kwargs):
+    move            = kwargs.get('move')
+    left_click      = kwargs.get("left_click")
+    confirm_action  = kwargs.get('confirm_action')
+    right_click     = kwargs.get('right_click')
+
+    results = []
+    
+    if targeting_item.use_effect.directional_targeting:
+        if move:
+            dx, dy = move
+            item_result = player.use(targeting_item, **kwargs, dx=dx, dy=dy)
+            results.extend(item_result)
+    else:
+        if move:
+            dx, dy = move
+            player.targeting_x += dx
+            player.targeting_y += dy
+        if left_click or confirm_action:
+            if left_click:
+                target_x, target_y = left_click
+            elif confirm_action:
+                target_x, target_y = player.targeting_x, player.targeting_y
+            item_result = player.use(targeting_item, **kwargs, target_x=target_x, target_y=target_y)
+            results.extend(item_result)
+        elif right_click:
+            results.append(message(targeting_cancelled=True))
+
+    return results
+
 def create_player():
     return Player(
         0, 0,
