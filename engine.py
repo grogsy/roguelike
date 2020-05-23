@@ -1,5 +1,5 @@
 import tcod
-from util import is_on_same_tile, handle_player_move, create_player, create_game_map, handle_player_pickup
+from util import is_on_same_tile, handle_player_move, create_player, create_game_map, handle_player_pickup, handle_player_targeting
 from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
 from entities.util import get_blocking_entities_at_location, is_enemy, is_alive
 from items.util import is_item
@@ -27,8 +27,6 @@ def play(console, player, entities, game_map, game_state):
     looting_container = None
     player.targeting_x = 0
     player.targeting_y = 0
-
-    TURN_COUNT = 1
 
     while not tcod.console_is_window_closed():
         # capture user input, this modifies the input objects(key and mouse) defined above
@@ -77,12 +75,7 @@ def play(console, player, entities, game_map, game_state):
         if game_state == GameStates.PLAYER_TURN:
             if move:
                 player_turn_results.extend(handle_player_move(player, move, entities, game_map, fov_map))
-
-                # update buff states
-                player_turn_results.extend(player.update_buff_counter())
-                player.update_mana_regen(TURN_COUNT)
                 game_state = GameStates.ENEMY_TURN
-                TURN_COUNT += 1
             elif pickup:
                 pick_up_results = handle_player_pickup(player, entities)
                 for result in pick_up_results:
@@ -91,28 +84,17 @@ def play(console, player, entities, game_map, game_state):
                         break
                 player_turn_results.extend(pick_up_results)
 
-
         if game_state == GameStates.TARGETING:
-            if targeting_item.use_effect.directional_targeting:
-                if move:
-                    dx, dy = move
-                    item_result = player.use(targeting_item, user=player, game_map=game_map, fov_map=fov_map, entities=entities, dx=dx, dy=dy)
-                    player_turn_results.extend(item_result)
-            else:
-                if move:
-                    dx, dy = move
-                    player.targeting_x += dx
-                    player.targeting_y += dy
-                if left_click or confirm_action:
-                    if left_click:
-                        target_x, target_y = left_click
-                    elif confirm_action:
-                        target_x, target_y = player.targeting_x, player.targeting_y
-                    item_result = player.use(targeting_item, user=player, entities=entities, fov_map=fov_map, target_x=target_x, target_y=target_y)
-                    TURN_COUNT += 1
-                    player_turn_results.extend(item_result)
-                elif right_click:
-                    player_turn_results.append({ 'targeting_cancelled': True })
+            kwargs = {
+                'user':           player,
+                'game_map':       game_map,
+                'fov_map':        fov_map,
+                'entities':       entities,
+                'move':           move,
+                'left_click':     left_click,
+                'confirm_action': confirm_action
+            }
+            player_turn_results.extend(handle_player_targeting(player, targeting_item, **kwargs))
         if select_readable:
             game_state = GameStates.READABLE_INVENTORY
         if select_quaffable:
@@ -147,7 +129,6 @@ def play(console, player, entities, game_map, game_state):
                     entities.remove(item)
                 player.stat_logger.log_loot()
             player_turn_results.extend(item_result)
-            TURN_COUNT += 1
 
         if exit:
             if game_state in INVENTORY_CONTEXT:
@@ -170,7 +151,7 @@ def play(console, player, entities, game_map, game_state):
         game_state = next_game_state if next_game_state is not None else game_state
 
         if game_state == GameStates.ENEMY_TURN:
-            for e in entities:                                   # enemy turn only occurs when they are in player field-of-view
+            for e in entities:                     # enemy turn only occurs when they are in player field-of-view
                 if is_alive(e) and is_enemy(e) and fov_map.is_in_fov(e.x, e.y):
                     enemy_turn_results = e.ai.take_turn(player, fov_map, game_map, entities)
 

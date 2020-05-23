@@ -1,3 +1,4 @@
+import functools
 import tcod
 import math
 
@@ -8,16 +9,41 @@ from components.ai import BasicMonster
 from game_state import RenderOrder
 from game_messages import message
 
+def update(func):
+    '''
+    A wrapper that updates turn-based internal state, such as mana regen 
+    and buff duration of sentient entities.
+
+    inst -> the instance of a sentient entity this function is working on.
+    '''
+    @functools.wraps(func)
+    def updater(inst, *args, **kwargs):
+        results = []
+        function_results = func(inst, *args, **kwargs)
+        # most entity methods return a list result of messages to pass to the 
+        # logger. Some(like Entity.move) don't, which is why this checking
+        # is somewhat necessary.
+        if isinstance(function_results, list):
+            results.extend(function_results)
+
+        inst.turn_count += 1
+        inst.update_mana_regen()
+        results.extend(inst.update_buff_counter())
+
+        return results
+    return updater
+
 class Actor(Entity):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, render_order=RenderOrder.ACTOR, **kwargs)
         self.hostile = False
+        self.turn_count = 0
 
-    def update_mana_regen(self, turn_count):
-        self.fighter.update_mana_regen(turn_count)
+    def update_mana_regen(self):
+        self.fighter.update_mana_regen()
 
 class Player(Actor):
-
+    @update
     def use(self, obj, target=None, **kwargs):
         '''
         obj param should support more than just items(possibly different entities)
@@ -35,8 +61,10 @@ class Player(Actor):
             results.extend(item.use(**kwargs)) 
             self.stat_logger.write_entry(item)
 
+
         return results
 
+    @update
     def loot(self, item):
         results = []
 
@@ -51,6 +79,7 @@ class Player(Actor):
     def remove_item(self, item):
         self.inventory.remove_item(item)
 
+    @update
     def drop_item(self, item):
         results = []
 
@@ -63,6 +92,7 @@ class Player(Actor):
 
         return results
 
+    @update
     def open(self, obj, *args, **kwargs):
         results = []
         if obj.locked:
@@ -74,7 +104,11 @@ class Player(Actor):
 
         results.append(message(message=msg))
 
-        return []
+        return results
+    
+    @update
+    def move(self, *args, **kwargs):
+        super().move(*args, **kwargs)
 
 
 class Enemy(Actor):

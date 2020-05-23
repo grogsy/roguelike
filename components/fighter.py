@@ -77,8 +77,6 @@ class Fighter:
     def take_damage(self, amount, dmg_type='physical'):
         results = []
         self.hp -= amount
-        if self.owner.name != 'Player':
-            print(id(self.owner))
 
         if self.hp <= 0:
             results.append(message(dead=self.owner, cause=dmg_type))
@@ -123,9 +121,11 @@ class Fighter:
             results.append(message(message=f"{self.owner.name} attacks {target.name}, but misses."))
 
         results.extend(calculated_increased_attack_bonus['messages'])
+
+        self.owner.turn_count += 1
             
         return results
         
-    def update_mana_regen(self, turn_count):
-        if turn_count % self.base_mana_regen_rate == 0 and self.mana < self.max_mana:
+    def update_mana_regen(self):
+        if self.owner.turn_count % self.base_mana_regen_rate == 0 and self.mana < self.max_mana:
             self.mana += self.base_mana_regen
