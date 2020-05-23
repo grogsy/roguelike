@@ -69,8 +69,10 @@ class Panel:
         tcod.console_set_default_foreground(self.console, tcod.white)
         player_level = f"LVL:{player.level:02}"
         tcod.console_print_ex(self.console, 1, 5, tcod.BKGND_NONE, tcod.LEFT, player_level)
+        player_turn = f"Turn:{player.turn_count}"
+        tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_turn)
         player_def = f"DEF:{player.fighter.defense:02}"
-        tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_def)
+        tcod.console_print_ex(self.console, 1, 6, tcod.BKGND_NONE, tcod.LEFT, player_def)
         # above is experimental
 
         self.console_blit()
