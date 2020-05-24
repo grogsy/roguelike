@@ -2,7 +2,8 @@ from random import randint
 
 import tcod
 
-from .tile import Tile, Tunnel
+from .tile import Tile, Tunnel, Stairs
+from .floor import Floor
 from .rectangle import Rect
 
 from items.util import generate_item_at_coord
@@ -20,6 +21,9 @@ class GameMap:
 
         self.max_items_per_room = 2
         self.max_monsters_per_room = 3
+
+        self.dungeon_level = 1
+        self.floors = []
 
         self.rooms = []
 
@@ -49,7 +53,13 @@ class GameMap:
                 self.create_room(new_room)
                 if not rooms:
                     self.place_player(new_room, player)
-                    place_chest(player.x + 1, player.y + 1, entities)
+
+                    # test placing chest
+                    chest_x = randint(new_room.x1 + 1, new_room.x2 - 1)
+                    chest_y = randint(new_room.y1 + 1, new_room.y2 - 1)
+                    place_chest(chest_x, chest_y, entities)
+
+                    self.tiles[player.x][player.y] = Stairs(self.dungeon_level - 1, False, player.x, player.y)
                 else:
                     previous_room = rooms[-1]
                     self.create_tunnels(previous_room, new_room)
@@ -59,10 +69,26 @@ class GameMap:
 
         self.update_tunnels_after_level_generation()
         self.rooms = rooms
+
+        # place descending stairs in random location of last room created.
+        last_room = self.rooms[-1]
+        stairs_x = randint(last_room.x1 + 1, last_room.x2 - 1)
+        stairs_y = randint(last_room.y1 + 1, last_room.y2 - 1)
+        self.tiles[stairs_x][stairs_y] = Stairs(self.dungeon_level + 1, False, stairs_x, stairs_y)
+
         # still experimental, will comment out if its REALLY causing problems
         # Also, this must run AFTER assigning rooms to self.rooms
         # because it uses the attribute
         self.place_doors()
+
+        if self.floors:
+            upstair_x = player.x
+            upstair_y = player.y
+        else:
+            upstair_x = None
+            upstair_y = None
+
+        self.floors.append(Floor(self.tiles, entities, stairs_x, stairs_y, upstair_x, upstair_y ))
 
     def place_player(self, room, player):
         '''

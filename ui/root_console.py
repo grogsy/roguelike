@@ -14,7 +14,7 @@ from constants import INVENTORY_CONTEXT
 from items.util import is_item
 from util import is_on_same_tile
 
-from map_objects.util import is_door
+from map_objects.util import is_door, is_stairs
 
 class RootConsole:
     '''
@@ -47,7 +47,6 @@ class RootConsole:
             menu_width=50,
             header_label='Home'
         )
-
 
         self.stats_view = StatsView(parent=self, width=50)
 
@@ -104,15 +103,19 @@ class RootConsole:
                     else:
                         tile.render(self.console, in_fov=False)
 
-    def clear_old_tiles(self, old_rooms):
-        '''
-        A helper function that can be useful when regenerating a floor.
-        It wipes the game map of old tile symbols that would otherwise appear on new floor generation.
-        '''
-        for room in old_rooms:
-            for x in range(room.x1, room.x2 + 1):
-                for y in range(room.y1, room.y2 + 1):
-                    tcod.console_put_char(self.console, x, y, ' ', flag=tcod.BKGND_NONE)
+    # def clear_old_tiles(self, old_rooms):
+    #     '''
+    #     A helper function that can be useful when regenerating a floor.
+    #     It wipes the game map of old tile symbols that would otherwise appear on new floor generation.
+    #     '''
+    #     for room in old_rooms:
+    #         for x in range(room.x1, room.x2 + 1):
+    #             for y in range(room.y1, room.y2 + 1):
+    #                 tcod.console_put_char(self.console, x, y, ' ', flag=tcod.BKGND_NONE)
+    def clear_old_tiles(self, game_map):
+        for x in range(game_map.width):
+            for y in range(game_map.height):
+                tcod.console_put_char(self.console, x, y, ' ', flag=tcod.BKGND_NONE)
 
     def get_entities_at_mouse_cursor(self, mouse_event, entities, fov_map, game_map):
         x, y = mouse_event.cx, mouse_event.cy
@@ -156,6 +159,14 @@ class RootConsole:
         names = '\n'.join(names)
 
         return names
+
+    def get_tile_at_player_locations(self, player, game_map):
+        tile = game_map.tiles[player.x][player.y]
+        if is_stairs(tile):
+            return f"You see stairs here({tile.level}).\n"
+        else:
+            return ""
+
 
     def clear(self):
         tcod.console_clear(self.console)

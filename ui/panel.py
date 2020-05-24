@@ -56,7 +56,8 @@ class Panel:
         # message_log.render()
         self.message_log.render()
         names = self.parent.get_entities_at_mouse_cursor(mouse_event, entities, fov_map, game_map)
-        names += self.parent.get_entities_at_player_location(player, entities)
+        names += self.parent.get_entities_at_player_location(player, entities) + '\n'
+        names += self.parent.get_tile_at_player_locations(player, game_map)
         self.display_names(names)
         self.health_bar.render(1, 1, player.fighter.hp, player.fighter.max_hp)
         self.mana_bar.render(1, 2, player.fighter.mana, player.fighter.max_mana)
@@ -73,6 +74,7 @@ class Panel:
         tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_turn)
         player_def = f"DEF:{player.fighter.defense:02}"
         tcod.console_print_ex(self.console, 1, 6, tcod.BKGND_NONE, tcod.LEFT, player_def)
+        tcod.console_print_ex(self.console, 1, 7, tcod.BKGND_NONE, tcod.LEFT, f"Floor:{game_map.dungeon_level}")
         # above is experimental
 
         self.console_blit()

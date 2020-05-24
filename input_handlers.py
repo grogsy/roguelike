@@ -62,10 +62,10 @@ def handle_player_turn_keys(key):
         return { 'select_projectile': True }
     elif key_char == 'q':
         return { 'select_quaffable': True }
-
-    # DEBUGGING
-    if key.vk == tcod.KEY_ENTER:
-        return { 'generate_level': True }
+    elif key_char == 'z' or key_char == '.':
+        return { 'wait': True }
+    elif key.vk == tcod.KEY_ENTER:
+        return { 'take_stairs': True }
 
     return {}
 

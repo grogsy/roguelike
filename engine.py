@@ -3,12 +3,14 @@ from util import is_on_same_tile, handle_player_move, create_player, create_game
 from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
 from entities.util import get_blocking_entities_at_location, is_enemy, is_alive
 from items.util import is_item
+from map_objects.util import is_stairs
 from ui import RootConsole
 from game_state import GameStates
 from fov_functions import FOV_Map
 from log import GameLog
+from game_messages import message
 
-from debug import generate_level, give_items
+from debug import give_items
 from constants import INVENTORY_CONTEXT
 from saves import save_game, load_game
 
@@ -64,7 +66,8 @@ def play(console, player, entities, game_map, game_state):
         confirm_action          = action.get('confirm_action')
         check_stats             = action.get('check_player_status')
         view_stats              = action.get('view_stats')
-        LEVEL_DEBUG             = action.get('generate_level')
+        wait                    = action.get('wait')
+        take_stairs             = action.get('take_stairs')
 
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
@@ -83,6 +86,9 @@ def play(console, player, entities, game_map, game_state):
                         looting_container = result.get('source')
                         break
                 player_turn_results.extend(pick_up_results)
+            elif wait:
+                player.turn_count += 1
+                game_state = GameStates.ENEMY_TURN
 
         if game_state == GameStates.TARGETING:
             kwargs = {
@@ -147,6 +153,47 @@ def play(console, player, entities, game_map, game_state):
         if view_stats:
             game_state = GameStates.CHECK_CHAR_STATS
 
+        if take_stairs and is_stairs(game_map.tiles[player.x][player.y]):
+            stairs = game_map.tiles[player.x][player.y]
+
+            # preserve the state of this floor
+            this_floor = game_map.floors[game_map.dungeon_level - 1]
+            this_floor.tiles = game_map.tiles
+            this_floor.entities = entities
+
+            old_level = game_map.dungeon_level
+            game_map.dungeon_level = stairs.level
+
+            if stairs.level == 0:
+                return
+            elif stairs.level >= len(game_map.floors) + 1:
+                entities = [player]
+                old_rooms = game_map.rooms
+                console.clear_old_tiles(game_map)
+                game_map.tiles = game_map.initialize_tiles()
+                game_map.make_map(player, entities)
+            else:
+                next_floor = game_map.floors[stairs.level - 1]
+                entities = next_floor.entities
+
+                old_rooms = game_map.rooms
+                console.clear_old_tiles(game_map)
+
+                game_map.tiles = next_floor.tiles
+
+
+                # if we're going down to prev visited floor
+                if old_level < stairs.level:
+                    player.x = next_floor.upstair_x
+                    player.y = next_floor.upstair_y
+                else:
+                    player.x = next_floor.downstair_x
+                    player.y = next_floor.downstair_y
+
+            fov_map.fov_map = fov_map.initialize_fov(game_map)
+            fov_map.recompute = True
+            player_turn_results.append(message(message="You take the stairs."))
+
         next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, entities, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state
 
@@ -160,25 +207,6 @@ def play(console, player, entities, game_map, game_state):
                         break
             if game_state != GameStates.PLAYER_DEAD:
                 game_state = GameStates.PLAYER_TURN
-
-        # LEVEL GEN DEBUG
-        if LEVEL_DEBUG:
-
-            entities = [player]
-
-            settings = {
-                'player': player,
-                'entities': entities,
-            }
-
-            old_rooms = game_map.rooms
-            console.clear_old_tiles(old_rooms)
-
-            generate_level(game_map, settings)
-            fov_map.fov_map = fov_map.initialize_fov(game_map)
-            fov_map.recompute = True
-
-            player.stat_logger.log_travel()
 
 def main():
     screen_width = 100

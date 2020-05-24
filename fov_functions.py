@@ -60,26 +60,3 @@ class FOV_Map:
 
     def is_in_fov(self, x, y):
         return tcod.map_is_in_fov(self.fov_map, x, y)
-
-
-
-def initialize_fov(game_map):
-    width = game_map.width
-    height = game_map.height
-
-    fov_map = tcod.map_new(width, height)
-
-    for y in range(height):
-        for x in range(width):
-            tile = game_map.tiles[x][y]
-            tcod.map_set_properties(
-                fov_map, 
-                x, y, 
-                not tile.block_sight, # is_transparent
-                not tile.blocked      # is_walkable
-            )
-
-    return fov_map
-
-def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=0):
-    tcod.map_compute_fov(fov_map, x, y, radius, light_walls, algorithm)
