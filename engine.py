@@ -1,5 +1,10 @@
 import tcod
-from util import is_on_same_tile, handle_player_move, create_player, create_game_map, handle_player_pickup, handle_player_targeting
+from util import (
+    is_on_same_tile, handle_player_move, create_player, 
+    create_game_map, handle_player_pickup,
+    handle_player_targeting, create_new_floor, load_previous_floor,
+    save_current_floor, handle_player_take_stairs
+)
 from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
 from entities.util import get_blocking_entities_at_location, is_enemy, is_alive
 from items.util import is_item
@@ -155,40 +160,13 @@ def play(console, player, entities, game_map, game_state):
 
         if take_stairs and is_stairs(game_map.tiles[player.x][player.y]):
             stairs = game_map.tiles[player.x][player.y]
-
-            # preserve the state of this floor
-            this_floor = game_map.floors[game_map.dungeon_level - 1]
-            this_floor.tiles = game_map.tiles
-            this_floor.entities = entities
-
-            old_level = game_map.dungeon_level
-            game_map.dungeon_level = stairs.level
+            save_current_floor(game_map, entities)
+            entities = [player]
 
             if stairs.level == 0:
                 return
-            elif stairs.level >= len(game_map.floors) + 1:
-                entities = [player]
-                old_rooms = game_map.rooms
-                console.clear_old_tiles(game_map)
-                game_map.tiles = game_map.initialize_tiles()
-                game_map.make_map(player, entities)
             else:
-                next_floor = game_map.floors[stairs.level - 1]
-                entities = next_floor.entities
-
-                old_rooms = game_map.rooms
-                console.clear_old_tiles(game_map)
-
-                game_map.tiles = next_floor.tiles
-
-
-                # if we're going down to prev visited floor
-                if old_level < stairs.level:
-                    player.x = next_floor.upstair_x
-                    player.y = next_floor.upstair_y
-                else:
-                    player.x = next_floor.downstair_x
-                    player.y = next_floor.downstair_y
+                handle_player_take_stairs(console, game_map, player, entities, stairs)
 
             fov_map.fov_map = fov_map.initialize_fov(game_map)
             fov_map.recompute = True
