@@ -16,6 +16,8 @@ def handle_keys(key, game_state):
         return handle_player_dead_keys(key)
     elif game_state == GameStates.CHECK_CHAR_STATS:
         return handle_player_check_stats(key)
+    elif game_state == GameStates.PLAYER_LEVEL_UP:
+        return handle_player_level_up(key)
 
     return {}
 
@@ -153,5 +155,20 @@ def handle_main_menu_keys(key):
         return { 'load_game': True }
     elif key_char == 'c' or key.vk == tcod.KEY_ESCAPE:
         return { 'exit': True }
+
+    return {}
+
+def handle_player_level_up(key):
+    if key:
+        key_char = chr(key.c)
+
+        if key_char == 'a':
+            return { 'level_up': 'hp' }
+        elif key_char == 'b':
+            return { 'level_up': 'str' }
+        elif key_char == 'c':
+            return { 'level_up': 'int' }
+        elif key_char == 'd':
+            return { 'level_up': 'def' }
 
     return {}

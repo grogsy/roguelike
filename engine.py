@@ -85,6 +85,7 @@ def play(console, player, entities, game_map, game_state):
         view_stats              = action.get('view_stats')
         wait                    = action.get('wait')
         take_stairs             = action.get('take_stairs')
+        level_up                = action.get('level_up')
 
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
@@ -95,7 +96,6 @@ def play(console, player, entities, game_map, game_state):
         if game_state == GameStates.PLAYER_TURN:
             if move:
                 player_turn_results.extend(handle_player_move(player, move, entities, game_map, fov_map))
-                game_state = GameStates.ENEMY_TURN
             elif pickup:
                 pick_up_results = handle_player_pickup(player, entities)
                 for result in pick_up_results:
@@ -105,8 +105,6 @@ def play(console, player, entities, game_map, game_state):
                 player_turn_results.extend(pick_up_results)
             elif wait:
                 player_turn_results.extend(player.wait())
-                game_state = GameStates.ENEMY_TURN
-
 
         if game_state == GameStates.TARGETING:
             kwargs = {
@@ -170,6 +168,24 @@ def play(console, player, entities, game_map, game_state):
             game_state = GameStates.CHECK_PLAYER_STATS
         if view_stats:
             game_state = GameStates.CHECK_CHAR_STATS
+        if level_up:
+            if level_up == 'hp':
+                player.fighter.max_hp += 20
+                player.fighter.hp = player.fighter.max_hp
+                msg = "Max HP raised by 20."
+            elif level_up == 'str':
+                player.fighter.power += 1
+                msg = "Damage raised by 1."
+            elif level_up == 'int':
+                player.fighter.max_mana += 20
+                msg = "Mana raised by 20."
+            elif level_up == 'def':
+                player.fighter.defense += 1
+                msg = "Defense raised by 1."
+            
+            player_turn_results.append(message(message=msg, color=tcod.green))
+
+            game_state = GameStates.PLAYER_TURN
 
         if take_stairs and is_stairs(game_map.tiles[player.x][player.y]):
             stairs = game_map.tiles[player.x][player.y]
@@ -181,7 +197,7 @@ def play(console, player, entities, game_map, game_state):
                 fov_map.fov_map = fov_map.initialize_fov(game_map)
                 fov_map.recompute = True
 
-        next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, entities, player.stat_logger)
+        next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, player, entities, game_state, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state
 
         if game_state == GameStates.ENEMY_TURN:
@@ -189,7 +205,7 @@ def play(console, player, entities, game_map, game_state):
                 if is_alive(e) and is_enemy(e) and fov_map.is_in_fov(e.x, e.y):
                     enemy_turn_results = e.take_turn(player, fov_map, game_map, entities)
 
-                    game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, entities)                    
+                    game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, player, entities, game_state)
                     if game_state == GameStates.PLAYER_DEAD:
                         break
             if game_state != GameStates.PLAYER_DEAD:
