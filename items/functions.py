@@ -4,12 +4,14 @@ from game_messages import Message
 
 from entities.entity import Entity
 from entities.items import Item, Potion, Readable
-from entities.util import get_blocking_entities_at_location
+from entities.util import get_blocking_entities_at_location, is_enemy
 from entities.actors import Enemy
 
 from components.ai import ConfusedMonster, SleepingMonster
 from components.fighter import Buff
 from map_objects.tile import Tunnel, Door
+
+# TODO: Change all instances of message passing to fit the new message passing interface(game_message.message())
 
 def heal(heal_amount, *args, **kwargs):
     user = kwargs.get('user')
@@ -275,12 +277,12 @@ def throw_knife(base_damage, *args, **kwargs):
         x += dx
         y += dy
         entity = get_blocking_entities_at_location(entities, x, y)
-        if isinstance(entity, Enemy):
+        if is_enemy(entity):
             break
 
-    damage = base_damage + user.fighter.power + user.fighter.calculate_attack_bonus_from_buffs()['bonus']
+    damage = base_damage + user.fighter.power + user.fighter.calculate_attack_bonus_from_buffs()
 
-    if entity and isinstance(entity, Enemy):
+    if entity and is_enemy(entity):
         if fov_map.is_in_fov(entity.x, entity.y):
             results.append({
                 'message': Message(f"You hit the {entity.name} dealing {damage} damage.")
@@ -329,10 +331,10 @@ def cast_magic_missile(base_damage, max_range, mana_cost=0, *args, **kwargs):
         x += dx
         y += dy
         entity = get_blocking_entities_at_location(entities, x, y)
-        if isinstance(entity, Enemy):
+        if is_enemy(entity):
             break
 
-    if entity and isinstance(entity, Enemy):
+    if entity and is_enemy(entity):
         if fov_map.is_in_fov(entity.x, entity.y):
             results.append({
                 'message': Message(f"You hit the {entity.name} dealing {damage} damage.")
@@ -354,7 +356,7 @@ def cast_mass_sleep(radius, duration, *args, mana_cost=0, **kwargs):
     results = []
 
     for entity in entities:
-        if isinstance(entity, Enemy) and entity.ai and entity.distance(caster.x, caster.y) <= radius:
+        if is_enemy(entity) and entity.ai and entity.distance(caster.x, caster.y) <= radius:
             sleeping_ai = SleepingMonster(entity.ai, duration=duration)
             sleeping_ai.owner = entity
             entity.ai = sleeping_ai

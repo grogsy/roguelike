@@ -6,6 +6,8 @@ from .entity import Entity
 from .util import get_blocking_entities_at_location
 
 from components.ai import BasicMonster
+from components.level import Level
+
 from game_state import RenderOrder
 from game_messages import message
 
@@ -42,7 +44,22 @@ class Actor(Entity):
     def update_mana_regen(self):
         self.fighter.update_mana_regen()
 
+    @update
+    def attack(self, target):
+        return self.fighter.attack(target)
+
+    def take_damage(self, amount):
+        return self.fighter.take_damage(amount)
+
 class Player(Actor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.level = Level()
+
+    def gain_xp(self, amt):
+        return self.level.add_xp(amt)
+
     @update
     def use(self, obj, target=None, **kwargs):
         '''
@@ -108,7 +125,14 @@ class Player(Actor):
     
     @update
     def move(self, *args, **kwargs):
+        results = []
         super().move(*args, **kwargs)
+
+        return results
+
+    @update
+    def wait(self):
+        pass
 
 
 class Enemy(Actor):
@@ -119,6 +143,9 @@ class Enemy(Actor):
         self.ai.owner = self
         self.soft_max_inventory = 3
         self.hostile = True
+
+    def take_turn(self, *args, **kwargs):
+        return self.ai.take_turn(*args, **kwargs)
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x

@@ -57,6 +57,7 @@ class MessageLog:
             targeting               = result.get('requires_targeting')
             targeting_cancelled     = result.get('targeting_cancelled')
             player_looting          = result.get('player_looting')
+            player_level_up         = result.get('player_level_up')
 
             if message:
                 self.add_message(message)
@@ -85,6 +86,8 @@ class MessageLog:
             if item_consumed or item_dropped: 
                 if result.get('source') == 'Player':
                     new_game_state = GameStates.ENEMY_TURN
+            if player_level_up:
+                new_game_state = GameStates.PLAYER_LEVEL_UP
             
 
         return new_game_state

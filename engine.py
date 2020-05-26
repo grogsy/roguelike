@@ -1,26 +1,29 @@
 import tcod
-from util import (
-    is_on_same_tile, handle_player_move, create_player, 
-    create_game_map, handle_player_pickup,
-    handle_player_targeting, create_new_floor, load_previous_floor,
-    save_current_floor, handle_player_take_stairs
-)
-from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
-from entities.util import get_blocking_entities_at_location, is_enemy, is_alive
-from items.util import is_item
-from map_objects.util import is_stairs
-from ui import RootConsole
-from game_state import GameStates
-from fov_functions import FOV_Map
-from log import GameLog
-from game_messages import message
 
-from debug import give_items
 from constants import INVENTORY_CONTEXT
 from saves import save_game, load_game
+from game_state import GameStates
+from game_messages import message
+
+from util.create import (
+    create_game_map, create_player, create_root_console, create_fov_map,
+    create_menu
+)
+from util.player_action import (
+    handle_player_move, handle_player_pickup, 
+    handle_player_targeting, handle_player_take_stairs
+)
+from util.entities import is_enemy, is_alive
+from util.identity import is_item, is_stairs
+from util.level import save_current_floor
+
+from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
+from log import GameLog
+
+from debug import give_items
 
 def play(console, player, entities, game_map, game_state):
-    fov_map = FOV_Map(game_map)
+    fov_map = create_fov_map(game_map)
 
     # initialize input objects
     key = tcod.Key()
@@ -46,6 +49,15 @@ def play(console, player, entities, game_map, game_state):
 
         if game_state in INVENTORY_CONTEXT:
             console.render_inventory(player, entities, game_state, container=looting_container)
+
+        if game_state == GameStates.PLAYER_LEVEL_UP:
+            level_up_options = [
+                '+1 CON',
+                '+1 STR',
+                '+1 INT',
+                '+1 DEX'
+            ]
+            create_menu(console, 'Choose a stat to strengthen.', level_up_options)
 
         console.flush()
 
@@ -92,8 +104,9 @@ def play(console, player, entities, game_map, game_state):
                         break
                 player_turn_results.extend(pick_up_results)
             elif wait:
-                player.turn_count += 1
+                player_turn_results.extend(player.wait())
                 game_state = GameStates.ENEMY_TURN
+
 
         if game_state == GameStates.TARGETING:
             kwargs = {
@@ -163,14 +176,10 @@ def play(console, player, entities, game_map, game_state):
             save_current_floor(game_map, entities)
             entities = [player]
 
-            if stairs.level == 0:
-                return
-            else:
-                handle_player_take_stairs(console, game_map, player, entities, stairs)
-
-            fov_map.fov_map = fov_map.initialize_fov(game_map)
-            fov_map.recompute = True
-            player_turn_results.append(message(message="You take the stairs."))
+            if stairs.level != 0:
+                player_turn_results.extend(handle_player_take_stairs(console, game_map, player, entities, stairs)) 
+                fov_map.fov_map = fov_map.initialize_fov(game_map)
+                fov_map.recompute = True
 
         next_game_state = console.panel.message_log.parse_turn_results(player_turn_results, entities, player.stat_logger)
         game_state = next_game_state if next_game_state is not None else game_state
@@ -178,7 +187,7 @@ def play(console, player, entities, game_map, game_state):
         if game_state == GameStates.ENEMY_TURN:
             for e in entities:                     # enemy turn only occurs when they are in player field-of-view
                 if is_alive(e) and is_enemy(e) and fov_map.is_in_fov(e.x, e.y):
-                    enemy_turn_results = e.ai.take_turn(player, fov_map, game_map, entities)
+                    enemy_turn_results = e.take_turn(player, fov_map, game_map, entities)
 
                     game_state = console.panel.message_log.parse_turn_results(enemy_turn_results, entities)                    
                     if game_state == GameStates.PLAYER_DEAD:
@@ -193,7 +202,7 @@ def main():
     map_width = 100
     map_height = 50
     
-    console = RootConsole('arial10x10.png', screen_width, screen_height, map_height)
+    console = create_root_console('arial10x10.png', screen_width, screen_height, map_height)
 
     player = None
     entities = []

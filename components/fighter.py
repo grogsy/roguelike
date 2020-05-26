@@ -15,6 +15,9 @@ class Buff:
     def expired(self):
         return self.duration <= 0
 
+    def __repr__(self):
+        return f"<Buff {self.name}, duration{self.duration}>"
+
 class BuffCollection:
     def __init__(self):
         self.attack_buffs = {}
@@ -50,7 +53,7 @@ class Fighter:
     '''
     A fighter component which some entities utilize to engage in combat.
     '''
-    def __init__(self, hp, defense, power, accuracy, mana=0):
+    def __init__(self, hp, defense, power, accuracy, mana=0, xp=0):
         self.max_hp = hp
         self.hp = hp
 
@@ -64,9 +67,11 @@ class Fighter:
         self.accuracy = accuracy
         self.buffs = BuffCollection()
 
+        self.xp = xp
+
     @property
     def all_stats(self):
-        power = self.power + self.calculate_attack_bonus_from_buffs()['bonus']
+        power = self.power + self.calculate_attack_bonus_from_buffs()
         return {
             'Health': self.max_hp,
             'Defense': self.defense,
@@ -79,7 +84,7 @@ class Fighter:
         self.hp -= amount
 
         if self.hp <= 0:
-            results.append(message(dead=self.owner, cause=dmg_type))
+            results.append(message(dead=self.owner, xp=self.xp, cause=dmg_type))
 
         return results
 
@@ -91,39 +96,31 @@ class Fighter:
             buff = self.buffs.attack_buffs[attack_buff]
             if not buff.expired:
                 bonus += buff.effect
-                buff.duration -= 1
-            else:
-                buffs_to_remove.append(attack_buff)
         
-        for buff in buffs_to_remove:
-            messages.append({'message': self.buffs.attack_buffs[buff].expire_message})
-            self.buffs.remove_attack_buff(buff)
-
-        return {
-            'messages': messages,
-            'bonus': bonus
-        }
+        return bonus
 
     def attack(self, target):
         results = []
         calculated_increased_attack_bonus = self.calculate_attack_bonus_from_buffs()
 
         if random.randint(0, 100) <= self.accuracy:
-            calculated_power = self.power + calculated_increased_attack_bonus['bonus']
+            calculated_power = self.power + calculated_increased_attack_bonus
             damage = calculated_power - target.fighter.defense
 
             if damage > 0:
                 results.append(message(message=f"{self.owner.name} attacks {target.name} and deals {damage} damage."))
-                results.extend(target.fighter.take_damage(damage))
+                results.extend(target.take_damage(damage))
             else:
                 results.append(message(message=f"{self.owner.name} attacks {target.name} but does not damage."))
         else:
             results.append(message(message=f"{self.owner.name} attacks {target.name}, but misses."))
 
-        results.extend(calculated_increased_attack_bonus['messages'])
+        for res in results:
+            xp_amt = res.get('xp')
+            if xp_amt and self.owner.__class__.__name__ == 'Player':
+                results.extend(self.owner.gain_xp(xp_amt))
 
-        self.owner.turn_count += 1
-            
+
         return results
         
     def update_mana_regen(self):

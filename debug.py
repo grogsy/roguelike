@@ -1,8 +1,6 @@
 import random
 import tcod
-from fov_functions import initialize_fov
 
-# from entity import Scroll, Potion, Projectile, Book
 from entities.items import Scroll, Potion, Projectile, Book, Guld
 
 from items import items

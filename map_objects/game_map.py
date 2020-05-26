@@ -59,6 +59,7 @@ class GameMap:
                     chest_y = randint(new_room.y1 + 1, new_room.y2 - 1)
                     place_chest(chest_x, chest_y, entities)
 
+                    # place stairs where player starts on the current floor
                     self.tiles[player.x][player.y] = Stairs(self.dungeon_level - 1, False, player.x, player.y)
                 else:
                     previous_room = rooms[-1]
@@ -82,6 +83,7 @@ class GameMap:
         self.place_doors()
 
         if self.floors:
+            # place coords that remember where player starts when descending
             upstair_x = player.x
             upstair_y = player.y
         else:

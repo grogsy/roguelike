@@ -32,6 +32,13 @@ class Panel:
             bg_color=tcod.dark_azure,
             width=self.bar_width
         )
+        self.xp_bar = Bar(
+            parent=self,
+            label='XP',
+            color=tcod.dark_yellow,
+            bg_color=tcod.darker_yellow,
+            width=self.bar_width
+        )
         self.message_log = MessageLog(
             parent=self,
             x=self.health_bar.width + 2,
@@ -61,6 +68,7 @@ class Panel:
         self.display_names(names)
         self.health_bar.render(1, 1, player.fighter.hp, player.fighter.max_hp)
         self.mana_bar.render(1, 2, player.fighter.mana, player.fighter.max_mana)
+        self.xp_bar.render(1, 3, player.level.xp, player.level.xp_to_next_level)
 
         # below is experimental
         tcod.console_set_default_foreground(self.console, tcod.gold)
@@ -68,7 +76,7 @@ class Panel:
         tcod.console_print_ex(self.console, 1, 4, tcod.BKGND_NONE, tcod.LEFT, money)
 
         tcod.console_set_default_foreground(self.console, tcod.white)
-        player_level = f"LVL:{player.level:02}"
+        player_level = f"LVL:{player.level.current_level}"
         tcod.console_print_ex(self.console, 1, 5, tcod.BKGND_NONE, tcod.LEFT, player_level)
         player_turn = f"Turn:{player.turn_count}"
         tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_turn)

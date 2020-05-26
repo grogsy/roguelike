@@ -23,12 +23,14 @@ fighters = {
         'hp': 10,
         'defense': 0,
         'power': 3,
-        'accuracy': 35
+        'accuracy': 35,
+        'xp': 5
     },
     'troll': {
         'hp': 16,
         'defense': 1,
         'power': 4,
-        'accuracy': 50
+        'accuracy': 50,
+        'xp': 12
     }
 }
