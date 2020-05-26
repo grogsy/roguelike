@@ -71,11 +71,10 @@ class Fighter:
 
     @property
     def all_stats(self):
-        power = self.power + self.calculate_attack_bonus_from_buffs()
         return {
             'Health': self.max_hp,
             'Defense': self.defense,
-            'Attack Power': power,
+            'Attack Power': self.power,
             'Hit Chance': self.accuracy
         }
 
@@ -115,10 +114,10 @@ class Fighter:
         else:
             results.append(message(message=f"{self.owner.name} attacks {target.name}, but misses."))
 
-        for res in results:
-            xp_amt = res.get('xp')
-            if xp_amt and self.owner.__class__.__name__ == 'Player':
-                results.extend(self.owner.gain_xp(xp_amt))
+        # for res in results:
+        #     xp_amt = res.get('xp')
+        #     if xp_amt and self.owner.__class__.__name__ == 'Player':
+        #         results.extend(self.owner.gain_xp(xp_amt))
 
 
         return results

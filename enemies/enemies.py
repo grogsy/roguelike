@@ -13,9 +13,32 @@ troll = {
     'name': "Troll",
 }
 
+bat = {
+    'char': 'B',
+    'color': tcod.white,
+    'name': 'Bat'
+}
+
+rat = {
+    'char': 'r',
+    'color': tcod.brass,
+    'name': 'Rat'
+}
+
+kobold = {
+    'char': 'k',
+    'color': tcod.brass,
+    'name': 'Kobold'
+}
+
+
+
 enemies = {
     'orc': orc,
-    'troll': troll
+    'troll': troll,
+    'bat': bat,
+    'rat': rat,
+    'kobold': kobold
 }
 
 fighters = {
@@ -32,5 +55,26 @@ fighters = {
         'power': 4,
         'accuracy': 50,
         'xp': 12
+    }, 
+    'bat': {
+        'hp': 6,
+        'defense': 0,
+        'power': 2,
+        'accuracy': 75,
+        'xp': 6
+    },
+    'rat': {
+        'hp': 3,
+        'defense': 1,
+        'power': 1,
+        'accuracy': 70,
+        'xp': 2
+    },
+    'kobold': {
+        'hp': 5,
+        'defense': 3,
+        'power': 2,
+        'accuracy': 65,
+        'xp': 8
     }
 }
