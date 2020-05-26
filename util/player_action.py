@@ -24,7 +24,7 @@ def handle_player_move(player, move, entities, game_map, fov_map):
             results.extend(player.open(door, fov_map))
     
     if not target and not game_map.is_blocked_by_tiling(dst_x, dst_y):
-        player.move(dx, dy)
+        results.extend(player.move(dx, dy))
         fov_map.recompute = True
 
     return results

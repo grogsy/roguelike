@@ -125,14 +125,14 @@ class Player(Actor):
     
     @update
     def move(self, *args, **kwargs):
-        results = []
+        results = [message(player_move=True)]
         super().move(*args, **kwargs)
 
         return results
 
     @update
     def wait(self):
-        pass
+        return [message(player_wait=True)]
 
 
 class Enemy(Actor):

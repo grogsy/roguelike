@@ -45,10 +45,11 @@ class MessageLog:
             tcod.console_print_ex(self.parent.console, self.x, y, tcod.BKGND_NONE, tcod.LEFT, message.text)
             y += 1
 
-    def parse_turn_results(self, results, entities, player_logger=None):
+    def parse_turn_results(self, results, player, entities, current_state, player_logger=None):
         new_game_state = None
         for result in results:
-            print(result)
+            if not result.get('player_move'):
+                print(result)
             message                 = result.get('message')
             dead_entity             = result.get('dead')
             item_added              = result.get('item_added')
@@ -58,9 +59,14 @@ class MessageLog:
             targeting_cancelled     = result.get('targeting_cancelled')
             player_looting          = result.get('player_looting')
             player_level_up         = result.get('player_level_up')
+            player_move             = result.get('player_move')
+            player_wait             = result.get('player_wait')
+            xp                      = result.get('xp')
 
             if message:
                 self.add_message(message)
+            if xp and current_state != GameStates.ENEMY_TURN:
+                results.extend(player.gain_xp(xp))
             if targeting:
                 new_game_state = GameStates.TARGETING
             if targeting_cancelled:
@@ -79,7 +85,7 @@ class MessageLog:
                 self.add_message(message)
             if new_game_state == GameStates.PLAYER_DEAD:
                 break
-            if item_added:
+            if player_move or player_wait or item_added:
                 new_game_state = GameStates.ENEMY_TURN
             if player_looting:
                 new_game_state = GameStates.LOOTING
