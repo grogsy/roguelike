@@ -12,7 +12,7 @@ from .stats import StatsView
 from constants import INVENTORY_CONTEXT
 
 from items.util import is_item
-from util import is_on_same_tile
+from util.misc import is_on_same_tile
 
 from map_objects.util import is_door, is_stairs
 
@@ -103,15 +103,6 @@ class RootConsole:
                     else:
                         tile.render(self.console, in_fov=False)
 
-    # def clear_old_tiles(self, old_rooms):
-    #     '''
-    #     A helper function that can be useful when regenerating a floor.
-    #     It wipes the game map of old tile symbols that would otherwise appear on new floor generation.
-    #     '''
-    #     for room in old_rooms:
-    #         for x in range(room.x1, room.x2 + 1):
-    #             for y in range(room.y1, room.y2 + 1):
-    #                 tcod.console_put_char(self.console, x, y, ' ', flag=tcod.BKGND_NONE)
     def clear_old_tiles(self, game_map):
         for x in range(game_map.width):
             for y in range(game_map.height):

@@ -94,5 +94,5 @@ class Stairs(Tile):
     def render(self, console, in_fov=False):
         super().render(console, in_fov)
         if self.explored or in_fov:
-            tcod.console_set_default_foreground(console, tcod.gray)
+            tcod.console_set_default_foreground(console, tcod.white)
             tcod.console_put_char(console, self.x, self.y, self.char, tcod.BKGND_NONE)

@@ -17,7 +17,6 @@ class Entity:
             render_order=RenderOrder.CORPSE, 
             fighter=None,
             inventory=None,
-            level=1
     ):
         self.x = x
         self.y = y
@@ -28,7 +27,6 @@ class Entity:
         self.render_order = render_order
         self.fighter = fighter
         self.inventory = inventory
-        self.level = level
         self.hostile = None
 
         self.ai = None

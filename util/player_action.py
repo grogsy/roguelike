@@ -1,34 +1,9 @@
-from entities.actors import Player
-from entities.inanimate import is_container
-from entities.util import get_blocking_entities_at_location, is_enemy
-
-from map_objects.util import is_door
-from map_objects.game_map import GameMap
-
-from items.util import is_item
-
-from components.fighter import Fighter
-from components.inventory import Inventory
-
-from colors import Colors
-
 from game_messages import message
 
-def is_on_same_tile(this, other):
-    return this.x == other.x and this.y == other.y
-
-def get_entity_at_coord(x, y, entities):
-    for entity in entities:
-        if entity.x == x and entity.y == y:
-            return entity
-    
-    return None
-
-def entity_on_tile(entity, x, y):
-    return entity.x == x and entity.y == y
-
-def is_same_entity_name(entity, other):
-    return entity.name == other.name
+from .entities import get_blocking_entities_at_location, is_enemy
+from .identity import is_door, is_item, is_container
+from .misc import is_on_same_tile
+from .level import create_new_floor, save_current_floor, load_previous_floor
 
 def handle_player_move(player, move, entities, game_map, fov_map):
     dx, dy = move
@@ -41,7 +16,7 @@ def handle_player_move(player, move, entities, game_map, fov_map):
     results = []
 
     if is_enemy(target):
-        attack_results = player.fighter.attack(target)
+        attack_results = player.attack(target)
         results.extend(attack_results)
     elif is_door(tile):
         door = tile
@@ -108,49 +83,8 @@ def handle_player_targeting(player, targeting_item, *args, **kwargs):
 
     return results
 
-def create_player():
-    return Player(
-        0, 0,
-        '@', Colors.player, 'Player', 
-        fighter=Fighter(hp=30, mana=30, defense=2, power=5, accuracy=100),
-        inventory=Inventory(capacity=26)
-    )
-
-def create_game_map(width, height, player, entities):
-    game_map = GameMap(width, height)
-    game_map.make_map(player, entities)
-
-    return game_map
-
-def create_new_floor(console, game_map, player, entities):
-    console.clear_old_tiles(game_map)
-
-    game_map.tiles = game_map.initialize_tiles()
-    game_map.make_map(player, entities)
-
-def load_previous_floor(console, game_map, player, entities, curr_level, prev_level):
-    next_floor = game_map.floors[prev_level - 1]
-    entities.extend(next_floor.entities)
-
-    console.clear_old_tiles(game_map)
-
-    game_map.tiles = next_floor.tiles
-
-    # if we're going DOWN to prev visited floor
-    if curr_level < prev_level:
-        player.x = next_floor.upstair_x
-        player.y = next_floor.upstair_y
-    # if we're going UP to prev visited floor
-    else:
-        player.x = next_floor.downstair_x
-        player.y = next_floor.downstair_y
-
-def save_current_floor(game_map, entities):
-    this_floor = game_map.floors[game_map.dungeon_level - 1]
-    this_floor.tiles = game_map.tiles
-    this_floor.entities = entities
-
 def handle_player_take_stairs(console, game_map, player, entities, stairs):
+    results = []
     old_level              = game_map.dungeon_level
     game_map.dungeon_level = stairs.level
 
@@ -158,3 +92,7 @@ def handle_player_take_stairs(console, game_map, player, entities, stairs):
         create_new_floor(console, game_map, player, entities)
     else:
         load_previous_floor(console, game_map, player, entities, old_level, stairs.level)
+
+    results.append(message(message="You take the stairs."))
+
+    return results

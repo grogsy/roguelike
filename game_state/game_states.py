@@ -1,15 +1,16 @@
-from enum import Enum
+from enum import Enum, auto
 
 class GameStates(Enum):
-    PLAYER_TURN         = 1
-    ENEMY_TURN          = 2
-    PLAYER_DEAD         = 3
-    SHOW_INVENTORY      = 4
-    DROP_INVENTORY      = 5
-    TARGETING           = 6
-    CHECK_PLAYER_STATS  = 7
-    READABLE_INVENTORY  = 8
-    LOOTING             = 9
-    CHECK_CHAR_STATS    = 10
-    THROWABLE_INVENTORY = 11
-    QUAFFABLE_INVENTORY = 12
+    PLAYER_TURN         = auto()
+    PLAYER_DEAD         = auto()
+    PLAYER_LEVEL_UP     = auto()
+    TARGETING           = auto()
+    LOOTING             = auto()
+    DROP_INVENTORY      = auto()
+    SHOW_INVENTORY      = auto()
+    READABLE_INVENTORY  = auto()
+    THROWABLE_INVENTORY = auto()
+    QUAFFABLE_INVENTORY = auto()
+    ENEMY_TURN          = auto()
+    CHECK_PLAYER_STATS  = auto()
+    CHECK_CHAR_STATS    = auto()
