@@ -9,7 +9,8 @@ def place_enemy(x, y, entities):
     if randint(0, 100) < 80:
         # 80% chance for a weakling to spawn
         random_enemy_name = choice('orc bat rat kobold'.split(' '))
-        enemy = create_enemy(random_enemy_name, x, y, loot_chance=2)
+        # enemy = create_enemy(random_enemy_name, x, y, loot_chance=2)
+        enemy = create_enemy('orc', x, y, loot_chance=2)
     else:
         # 20% chance for a troll to spawn
         enemy = create_enemy('troll', x, y, loot_chance=5)

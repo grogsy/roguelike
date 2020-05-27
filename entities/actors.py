@@ -60,6 +60,10 @@ class Player(Actor):
     def gain_xp(self, amt):
         return self.level.add_xp(amt)
 
+    @property
+    def _level(self):
+        return self.level.current_level
+
     @update
     def use(self, obj, target=None, **kwargs):
         '''
@@ -136,12 +140,13 @@ class Player(Actor):
 
 
 class Enemy(Actor):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, level, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.ai = BasicMonster()
         self.ai.owner = self
         self.soft_max_inventory = 3
+        self._level = level
         self.hostile = True
 
     def take_turn(self, *args, **kwargs):

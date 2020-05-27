@@ -8,12 +8,24 @@ from ui.menu import Menu
 from fov_functions import FOV_Map
 
 def create_player():
-    return Player(
+    player = Player(
         0, 0,
         '@', Colors.player, 'Player', 
-        fighter=Fighter(hp=30, mana=30, defense=2, power=5, accuracy=100),
+        # fighter=Fighter(hp=30, mana=30, defense=2, power=5, accuracy=100),
+        fighter=Fighter(
+            hp=10,
+            power=5,
+            defense=4,
+            constitution=5,
+            strength=4,
+            intelligence=4,
+            dexterity=5,
+            mana=10
+        ),
         inventory=Inventory(capacity=26)
     )
+
+    return player
 
 def create_game_map(width, height, player, entities):
     game_map = GameMap(width, height)
