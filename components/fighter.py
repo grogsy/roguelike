@@ -71,6 +71,8 @@ class Fighter:
 
     def __init__(self, hp, power, defense, constitution, strength, intelligence, dexterity, mana=0, xp=0):
         self.base_hp = hp
+        self.base_hp_regen = 1
+        self.base_hp_regen_rate = 15
         self.base_mana = mana
         self.base_mana_regen = 1
         self.base_mana_regen_rate = 20
@@ -193,10 +195,18 @@ class Fighter:
         #     xp_amt = res.get('xp')
         #     if xp_amt and self.owner.__class__.__name__ == 'Player':
         #         results.extend(self.owner.gain_xp(xp_amt))
-        results.append(message(perform_attack=True, source=self.owner.name, acc=accuracy, match=d8))
+        results.append(message(perform_attack=True, source=self.owner, acc=accuracy, match=d8))
 
         return results
         
     def update_mana_regen(self):
         if self.owner.turn_count % self.base_mana_regen_rate == 0 and self.mana < self.max_mana:
             self.mana += self.base_mana_regen
+
+    def update_hp_regen(self):
+        if self.owner.turn_count % self.base_hp_regen_rate == 0 and self.hp < self.max_hp:
+            self.hp += self.base_hp_regen
+
+    def update_regens(self):
+        self.update_mana_regen()
+        self.update_hp_regen

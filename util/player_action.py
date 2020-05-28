@@ -56,8 +56,8 @@ def handle_player_pickup(player, entities):
 def handle_player_targeting(player, targeting_item, *args, **kwargs):
     move            = kwargs.get('move')
     left_click      = kwargs.get("left_click")
-    confirm_action  = kwargs.get('confirm_action')
     right_click     = kwargs.get('right_click')
+    confirm_action  = kwargs.get('confirm_action')
 
     results = []
     

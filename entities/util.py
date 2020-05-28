@@ -20,6 +20,9 @@ def is_enemy(entity):
 def is_alive(entity):
     return entity.ai is not None
 
+def can_fight(entity):
+    return getattr(entity, 'fighter', False)
+
 def drop_dead_entity_inventory(dead_entity, entities):
     while dead_entity.inventory:
         dropped_item = dead_entity.inventory.items.pop()

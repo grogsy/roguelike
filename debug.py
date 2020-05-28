@@ -1,9 +1,9 @@
 import random
 import tcod
 
-from entities.items import Scroll, Potion, Projectile, Book, Guld
+from entities.items import Scroll, Potion, Projectile, Book, Guld, Equipable
 
-from items import items
+from items import items, equipment
 
 def label_rooms(console, game_map):
     for i, room in enumerate(game_map.rooms):
@@ -38,4 +38,6 @@ def give_items(player):
     player.inventory.items.append((Projectile(0, 0, stack_count=random.randint(1, 10), **items.throwing_dagger)))
     player.inventory.items.append((Book(0, 0, **items.magic_missile_book)))
     player.inventory.items.append((Book(0, 0, **items.aoe_sleep_book)))
-    # player.inventory.add_item(Guld(0, 0, stack_count=random.randint(30, 1500)))
+    player.inventory.items.append((Equipable(0, 0, **equipment.long_sword)))
+    player.inventory.items.append((Equipable(0, 0, **equipment.long_sword)))
+    player.equip(player.inventory.items[-1])

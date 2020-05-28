@@ -33,9 +33,6 @@ class Container(Inanimate):
 class Chest(Container):
     pass
 
-def is_container(entity):
-    return isinstance(entity, Container)
-
 def create_chest(*args, **kwargs):
     chest = Chest(*args, '(', tcod.Color(89, 60, 31), 'Chest', **kwargs)
 

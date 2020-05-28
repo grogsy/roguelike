@@ -3,7 +3,7 @@ import tcod
 from game_state import GameStates, RenderOrder
 
 from entities.items import Projectile, Readable, Potion, Stackable
-from entities.inanimate import is_container
+from util.identity import is_item, is_container, is_door, is_stairs, is_equipable
 
 from .menu import Menu
 from .panel import Panel
@@ -11,10 +11,7 @@ from .stats import StatsView
 
 from constants import INVENTORY_CONTEXT
 
-from items.util import is_item
 from util.misc import is_on_same_tile
-
-from map_objects.util import is_door, is_stairs
 
 class RootConsole:
     '''
@@ -187,6 +184,9 @@ class RootConsole:
         elif game_state == GameStates.QUAFFABLE_INVENTORY:
             self.inventory_menu.header_label = 'Drink which item?'
             self.inventory_context = [item for item in player.inventory.items if isinstance(item, Potion)]
+        elif game_state == GameStates.EQUIPABLE_INVENTORY:
+            self.inventory_menu.header_label = "Select item to equip."
+            self.inventory_context = [item for item in player.inventory.items if is_equipable(item)]
         else:
             self.inventory_context = player.inventory.items
             

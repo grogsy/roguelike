@@ -11,6 +11,7 @@ class GameStates(Enum):
     READABLE_INVENTORY  = auto()
     THROWABLE_INVENTORY = auto()
     QUAFFABLE_INVENTORY = auto()
+    EQUIPABLE_INVENTORY = auto()
     ENEMY_TURN          = auto()
     CHECK_PLAYER_STATS  = auto()
     CHECK_CHAR_STATS    = auto()

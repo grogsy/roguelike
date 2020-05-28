@@ -7,6 +7,7 @@ from .util import get_blocking_entities_at_location
 
 from components.ai import BasicMonster
 from components.level import Level
+from components.equipment import Equipment
 
 from game_state import RenderOrder
 from game_messages import message
@@ -29,7 +30,8 @@ def update(func):
             results.extend(function_results)
 
         inst.turn_count += 1
-        inst.update_mana_regen()
+        # inst.update_mana_regen()
+        inst.fighter.update_regens()
         results.extend(inst.update_buff_counter())
 
         return results
@@ -56,9 +58,19 @@ class Player(Actor):
         super().__init__(*args, **kwargs)
 
         self.level = Level()
+        self.equipment = Equipment(self)
 
     def gain_xp(self, amt):
         return self.level.add_xp(amt)
+
+    @update
+    def equip(self, item):
+        results = self.equipment.equip(item)
+        for res in results:
+            if res.get('equipped'):
+                self.remove_item(res.get('item'))
+
+        return results
 
     @property
     def _level(self):

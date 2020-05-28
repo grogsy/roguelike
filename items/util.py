@@ -1,10 +1,6 @@
 import random
 from .items import *
-
-from entities.items import Potion, Scroll, Projectile, Book, Guld, Item
-
-def is_item(entity):
-    return isinstance(entity, Item)
+from entities.items import Potion, Scroll, Projectile, Book, Guld
 
 def generate_item_at_coord(x, y):
     item_chance = random.randint(0, 100)

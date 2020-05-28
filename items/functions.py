@@ -1,15 +1,13 @@
 import random
 import tcod
-from game_messages import Message
+from game_messages import message, Message
 
-from entities.entity import Entity
 from entities.items import Item, Potion, Readable
-from entities.util import get_blocking_entities_at_location, is_enemy
-from entities.actors import Enemy
+from entities.util import get_blocking_entities_at_location, is_enemy, can_fight
+from util.identity import is_player, is_tunnel, is_door
 
 from components.ai import ConfusedMonster, SleepingMonster
 from components.fighter import Buff
-from map_objects.tile import Tunnel, Door
 
 # TODO: Change all instances of message passing to fit the new message passing interface(game_message.message())
 
@@ -18,18 +16,16 @@ def heal(heal_amount, *args, **kwargs):
     
     results = []
 
-    if not isinstance(user, Entity) or not user.fighter:
-        results.append({'consumed': False, 'message': Message("You can't heal that.", tcod.red) })
+    if not can_fight(user):
+        results.append(message(consumed=False, message="You can't heal that.", color=tcod.red))
     else:
         user.fighter.hp += random.randint(min(heal_amount), max(heal_amount))
 
         if user.fighter.hp >  user.fighter.max_hp:
             user.fighter.hp = user.fighter.max_hp
 
-        if user.name == 'Player':
-            results.append({ 'source': 'Player', 'consumed': True, 'message': Message("You feel better.", tcod.light_green) })
-        else:
-            results.append({ 'consumed': True, 'message': Message(f"The {user.name} feels better.") })
+        if is_player(user):
+            results.append(message(source=user, consumed=True, message="You feel better.", color=tcod.light_green))
 
     return results
 
@@ -41,7 +37,8 @@ def mana_pot(restore_amount, *args, **kwargs):
     if user.fighter.mana > user.fighter.max_mana:
         user.fighter.mana = user.fighter.max_mana
 
-    results.append({'source': user.name, 'consumed': True, 'message': Message("You feel more energetic.", tcod.light_azure)})
+    if is_player(user):
+        results.append(message(source=user, consumed=True, message="You feel more energetic.", color=tcod.light_azure))
 
     return results
 
@@ -68,20 +65,20 @@ def cast_lightning(base_damage, max_range, *args, **kwargs):
                 target = entity
                 closest_distance = dist
     if target:
-        results.append({
-            'consumed': True,
-            'source': caster.name,
-            'target': target, 
-            'message':  Message(f"A lightning bolt strikes {target.name} and deals it {damage} damage.")
-        })
+        results.append(
+            message(
+                consumed=True, source=caster,
+                target=target, message=f"A lightning bolt strings {target.name} and deals it {damage} damage."
+        ))
         results.extend(target.fighter.take_damage(damage, dmg_type))
     else:
-        results.append({
-            'consumed': False,
-            'source': caster.name,
-            'target': None,
-            'message': Message('No enemy close enough to strike.', tcod.red)
-        })
+        results.append(
+            message(
+                consumed=False,
+                source=caster,
+                target=None,
+                message="No enemy close enough to strike."
+        ))
 
     return results
 
@@ -137,38 +134,32 @@ def cast_fireball(base_damage, radius, *args, **kwargs):
 
     for entity in entities:
         if entity.distance(target_x, target_y) <= radius:
-            if entity.fighter:
+            if can_fight(entity):
                 if entity.name == 'Player':
-                    results.append({
-                        'message': Message(f"You got caught in the blast radius and suffer {damage} damage.", tcod.light_flame)
-                    })
+                    results.append(message(message=f"You got caught in the blast radius and suffer {damage} damage.", color=tcod.light_flame))
                 elif fov_map.is_in_fov(entity.x, entity.y):
-                    results.append({
-                        'message': Message(f"The {entity.name} burns and takes {damage} damage.")
-                    })
+                    results.append(message(message=f"The {entity.name} burns takes {damage} damage."))
                 else:
-                    results.append({
-                        'message': Message("You hear something shriek in burning agony.")
-                    })
+                    results.append(message(message="You hear something shriek in burning agony."))
                 results.extend(entity.fighter.take_damage(damage, dmg_type))
             elif isinstance(entity, Item):
                 destroyed_items.append(entity)
         
-        for item in destroyed_items:
-            if not fov_map.is_in_fov(item.x, item.y):
-                results.append({
-                    'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
-                })
-            elif isinstance(item, Readable):
-                results.append({
-                    'message': Message(f"The {item.name} crumbles into ashes!")
-                })
-            elif isinstance(item, Potion):
-                results.append({
-                    'message': Message(f"The {item.name} bursts open and shatters!")
-                })
+        # for item in destroyed_items:
+        #     if not fov_map.is_in_fov(item.x, item.y):
+        #         results.append({
+        #             'message': Message(f"You hear the sound of things being burnt to a fiery crisp.")
+        #         })
+        #     elif isinstance(item, Readable):
+        #         results.append({
+        #             'message': Message(f"The {item.name} crumbles into ashes!")
+        #         })
+        #     elif isinstance(item, Potion):
+        #         results.append({
+        #             'message': Message(f"The {item.name} bursts open and shatters!")
+        #         })
 
-            entities.remove(entity)
+            # entities.remove(entity)
 
     return results
 
@@ -203,7 +194,7 @@ def cast_confuse(debuff_duration, *args, **kwargs):
 
             break
     else:
-        results.append({'consumed': False, 'message': Message('Invalid target.', tcod.yellow)})
+        results.append(message(consumed=False, message="Invalid target.", color=tcod.yellow))
 
     return results
 
@@ -216,16 +207,11 @@ def reveal_floor(*args, **kwargs):
     for x in range(game_map.width):
         for y in range(game_map.height):
             tile = game_map.tiles[x][y]
-            if isinstance(tile, Tunnel) or isinstance(tile, Door) or not tile.blocked:
+            if is_tunnel(tile) or is_door(tile) or not tile.blocked:
                 tile.explored = True
 
     fov_map.recompute = True
-
-    results.append({
-        'consumed': True,
-        'source': caster.name,
-        'message': Message("All the rooms on this floor have been revealed!")
-    })
+    results.append(message(consumed=True, source=caster, message="All the rooms on this floor have been revealed!"))
 
     return results
 
@@ -244,11 +230,7 @@ def teleport(*args, **kwargs):
 
     fov_map.recompute = True
 
-    results.append({
-        'consumed': True,
-        'source': caster.name,
-        'message': Message("Your teleport yourself out of there.")
-    })
+    results.append(message(consumed=True, source=caster, message="You teleport yourself out of there."))
 
     return results
 
@@ -373,3 +355,4 @@ def cast_mass_sleep(radius, duration, *args, mana_cost=0, **kwargs):
     })
 
     return results
+

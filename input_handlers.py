@@ -58,12 +58,14 @@ def handle_player_turn_keys(key):
         return { 'drop_inventory': True }
     elif key_char == 'r':
         return { 'select_readable': True }
-    elif key_char == 's':
-        return { 'view_stats': True }
     elif key_char == 't':
         return { 'select_projectile': True }
     elif key_char == 'q':
         return { 'select_quaffable': True }
+    elif key_char == 'e':
+        return { 'equipping': True }
+    elif key_char == 's':
+        return { 'view_stats': True }
     elif key_char == 'z' or key_char == '.':
         return { 'wait': True }
     elif key.vk == tcod.KEY_ENTER:

@@ -2,12 +2,17 @@ import tcod
 import random
 import copy
 from uuid import uuid4
+from enum import Enum, auto
 
 from .entity import Entity
 from .util import entity_on_tile, is_same_entity_name
 
 from game_messages import message
 from game_state import RenderOrder
+
+class EquipmentSlots(Enum):
+    MAIN_HAND = auto()
+    OFF_HAND  = auto()
 
 class Item(Entity):
     def __init__(self, *args, use_effect=None, **kwargs):
@@ -20,6 +25,14 @@ class Item(Entity):
         results.extend(self.use_effect(*args, **kwargs))
 
         return results
+
+class Equipable(Item):
+    def __init__(self, *args, slot, power_bonus=0, defense_bonus=0, max_hp_bonus=0, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.equip_slot = slot
+        self.power_bonus = power_bonus
+        self.defense_bonus = defense_bonus
+        self.max_hp_bonus = max_hp_bonus
 
 class Readable:
     def use(self, *args, **kwargs):

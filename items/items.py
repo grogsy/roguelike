@@ -1,8 +1,7 @@
-import random
-# import .functions
-from .functions import *
-from game_messages import Message
 import tcod
+import random
+from game_messages import Message
+from .functions import *
 
 class UseEffect:
     def __init__(self, effect_function, requires_target=False, directional_targeting=False, target_msg=Message('Select target.', tcod.light_cyan), **kwargs):

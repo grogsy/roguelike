@@ -7,7 +7,9 @@ from .floor import Floor
 from .rectangle import Rect
 
 from items.util import generate_item_at_coord
-from .util import place_enemy, is_door, create_door, place_chest
+from .util import place_enemy, create_door, place_chest
+
+from util.identity import is_door
 
 class GameMap:
     def __init__(self, width, height):

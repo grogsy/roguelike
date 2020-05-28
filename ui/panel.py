@@ -1,7 +1,7 @@
 import tcod
 
 from .bar import Bar
-from game_messages import MessageLog
+from message_log import MessageLog
 
 class Panel:
     def __init__(self, parent, width, screen_height, height):
