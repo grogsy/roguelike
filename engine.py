@@ -16,6 +16,7 @@ from util.player_action import (
 from util.entities import is_enemy, is_alive
 from util.identity import is_item, is_stairs
 from util.level import save_current_floor
+from util.misc import show_equipped_items
 
 from input_handlers import handle_keys, handle_mouse, handle_main_menu_keys
 from log import GameLog
@@ -49,6 +50,8 @@ def play(console, player, entities, game_map, game_state):
 
         if game_state in INVENTORY_CONTEXT:
             console.render_inventory(player, entities, game_state, container=looting_container)
+        if game_state == GameStates.VIEW_EQUIP:
+            show_equipped_items(console, player)
 
         if game_state == GameStates.PLAYER_LEVEL_UP:
             level_up_options = [
@@ -87,6 +90,7 @@ def play(console, player, entities, game_map, game_state):
         take_stairs             = action.get('take_stairs')
         level_up                = action.get('level_up')
         equipping               = action.get('equipping')
+        view_equip              = action.get('view_equip')
 
         left_click = mouse_action.get('left_click')
         right_click = mouse_action.get('right_click')
@@ -162,7 +166,7 @@ def play(console, player, entities, game_map, game_state):
                 game_state = GameStates.PLAYER_TURN
             elif game_state == GameStates.TARGETING:
                 player_turn_results.append({ 'targeting_cancelled': True })
-            elif game_state in (GameStates.CHECK_PLAYER_STATS, GameStates.CHECK_CHAR_STATS):
+            elif game_state in (GameStates.CHECK_PLAYER_STATS, GameStates.CHECK_CHAR_STATS, GameStates.VIEW_EQUIP):
                 game_state = GameStates.PLAYER_TURN
             else:
                 save_game(player, entities, game_map, console.panel.message_log, game_state)
@@ -173,6 +177,8 @@ def play(console, player, entities, game_map, game_state):
             game_state = GameStates.CHECK_PLAYER_STATS
         if view_stats:
             game_state = GameStates.CHECK_CHAR_STATS
+        if view_equip:
+            game_state = GameStates.VIEW_EQUIP
         if level_up:
             if level_up == 'hp':
                 player.fighter.max_hp += 20

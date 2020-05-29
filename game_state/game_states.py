@@ -15,3 +15,4 @@ class GameStates(Enum):
     ENEMY_TURN          = auto()
     CHECK_PLAYER_STATS  = auto()
     CHECK_CHAR_STATS    = auto()
+    VIEW_EQUIP          = auto()

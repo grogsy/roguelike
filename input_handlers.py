@@ -18,6 +18,8 @@ def handle_keys(key, game_state):
         return handle_player_check_stats(key)
     elif game_state == GameStates.PLAYER_LEVEL_UP:
         return handle_player_level_up(key)
+    elif game_state == GameStates.VIEW_EQUIP:
+        return handle_view_equip_keys(key)
 
     return {}
 
@@ -64,6 +66,8 @@ def handle_player_turn_keys(key):
         return { 'select_quaffable': True }
     elif key_char == 'e':
         return { 'equipping': True }
+    elif key_char == 'w':
+        return { 'view_equip': True }
     elif key_char == 's':
         return { 'view_stats': True }
     elif key_char == 'z' or key_char == '.':
@@ -172,5 +176,13 @@ def handle_player_level_up(key):
             return { 'level_up': 'int' }
         elif key_char == 'd':
             return { 'level_up': 'def' }
+
+    return {}
+
+def handle_view_equip_keys(key):
+    key_char=  chr(key.c)
+
+    if key_char == 'w' or key.vk == tcod.KEY_ESCAPE:
+        return { 'exit': True }
 
     return {}

@@ -9,6 +9,11 @@ class Equipment:
         self.main_hand = main_hand
         self.off_hand = off_hand
 
+        self.slots = {
+            EquipmentSlots.MAIN_HAND: self.main_hand,
+            EquipmentSlots.OFF_HAND: self.off_hand
+        }
+
 
     @property
     def max_hp_bonus(self):
@@ -20,19 +25,30 @@ class Equipment:
         if self.off_hand is not None:
             bonus += self.off_hand.max_hp_bonus
 
+    @property
+    def power_bonus(self):
+        bonus = 0
+
+        if self.main_hand is not None:
+            bonus += self.main_hand.power_bounus
+
+        if self.off_hand is not None:
+            bonus += self.off_hand.power_bonus
+
+        return bonus
+
     def equip(self, item):
         results = []
 
         slot = item.equip_slot
 
-        if slot == EquipmentSlots.MAIN_HAND:
-            if self.main_hand is None:
-                self.main_hand = item
-                equipped=True
-                msg = f"You equip the {item.name}."
-            else:
-                equipped=False
-                msg= f"You are already wearing something in that slot ({self.main_hand})."
+        if self.slots[slot] is None:
+            self.slots[slot] = item
+            equipped = True
+            msg = f"You equip the {item.name}."
+        else:
+            equipped = False
+            msg= f"You are already wearing something in that slot ({self.slots[slot]})."
 
         if equipped:
             results.append(
@@ -40,5 +56,17 @@ class Equipment:
             )
         else:
             results.append(message(equipped=equipped, message=msg))
+        # if slot == EquipmentSlots.MAIN_HAND:
+        #     if self.main_hand is None:
+        #         self.main_hand = item
+        #         equipped = True
+        #         msg = f"You equip the {item.name}."
+        #     else:
+        #         equipped=False
+        #         msg= f"You are already wearing something in that slot ({self.main_hand})."
+        # elif slot == EquipmentSlots.OFF_HAND:
+        #     if self.off_hand is None:
+        #         self.off_hand = item
+
 
         return results
