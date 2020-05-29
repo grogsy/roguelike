@@ -171,13 +171,13 @@ def handle_player_level_up(key):
         key_char = chr(key.c)
 
         if key_char == 'a':
-            return { 'level_up': 'hp' }
+            return { 'level_up': 'CON' }
         elif key_char == 'b':
-            return { 'level_up': 'str' }
+            return { 'level_up': 'STR' }
         elif key_char == 'c':
-            return { 'level_up': 'int' }
+            return { 'level_up': 'INT' }
         elif key_char == 'd':
-            return { 'level_up': 'def' }
+            return { 'level_up': 'DEX' }
 
     return {}
 
