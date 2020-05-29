@@ -72,6 +72,15 @@ class Player(Actor):
 
         return results
 
+    @update
+    def unequip(self, item):
+        results = self.equipment.unequip(item)
+        for res in results:
+            if res.get('unequipped'):
+                self.inventory.add_item(item)
+
+        return results
+
     @property
     def _level(self):
         return self.level.current_level

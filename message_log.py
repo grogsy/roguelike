@@ -63,6 +63,7 @@ class MessageLog:
             player_move             = result.get('player_move')
             player_wait             = result.get('player_wait')
             equipped                = result.get('equipped')
+            unequipped              = result.get('unequipped')
             perform_attack          = result.get('perform_attack')
             xp                      = result.get('xp')
 
@@ -93,7 +94,7 @@ class MessageLog:
                 new_game_state = GameStates.ENEMY_TURN
             if player_looting:
                 new_game_state = GameStates.LOOTING
-            if (item_consumed or item_dropped or perform_attack or equipped) and is_player(result.get('source')): 
+            if (item_consumed or item_dropped or perform_attack or equipped, unequipped) and is_player(result.get('source')): 
                 new_game_state = GameStates.ENEMY_TURN
             if player_level_up:
                 new_game_state = GameStates.PLAYER_LEVEL_UP

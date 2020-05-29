@@ -17,13 +17,18 @@ class Equipment:
 
     @property
     def max_hp_bonus(self):
+        # if self.main_hand is not None:
+        #     bonus += self.main_hand.max_hp_bonus
+
+        # if self.off_hand is not None:
+        #     bonus += self.off_hand.max_hp_bonus
         bonus = 0
 
-        if self.main_hand is not None:
-            bonus += self.main_hand.max_hp_bonus
+        for equip in self.slots.values():
+            if equip is not None:
+                bonus += max_hp_bonus
 
-        if self.off_hand is not None:
-            bonus += self.off_hand.max_hp_bonus
+        return bonus
 
     @property
     def power_bonus(self):
@@ -56,17 +61,15 @@ class Equipment:
             )
         else:
             results.append(message(equipped=equipped, message=msg))
-        # if slot == EquipmentSlots.MAIN_HAND:
-        #     if self.main_hand is None:
-        #         self.main_hand = item
-        #         equipped = True
-        #         msg = f"You equip the {item.name}."
-        #     else:
-        #         equipped=False
-        #         msg= f"You are already wearing something in that slot ({self.main_hand})."
-        # elif slot == EquipmentSlots.OFF_HAND:
-        #     if self.off_hand is None:
-        #         self.off_hand = item
 
+        return results
+
+    def unequip(self, item):
+        results = []
+        slot = item.equip_slot
+
+        self.slots[slot] = None
+
+        results.append(message(unequipped=True, item=item, source=self.owner, message=f"You unequip your {item.name}."))
 
         return results

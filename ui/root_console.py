@@ -196,6 +196,9 @@ class RootConsole:
         elif game_state == GameStates.EQUIPABLE_INVENTORY:
             self.inventory_menu.header_label = "Select item to equip."
             self.inventory_context = [item for item in player.inventory.items if is_equipable(item)]
+        elif game_state == GameStates.UNEQUIP:
+            self.inventory_menu.header_label = "Choose an item to unequip."
+            self.inventory_context = [equip for equip in player.equipment.slots.values() if equip is not None]
         else:
             self.inventory_context = player.inventory.items
             

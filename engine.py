@@ -90,6 +90,7 @@ def play(console, player, entities, game_map, game_state):
         take_stairs             = action.get('take_stairs')
         level_up                = action.get('level_up')
         equipping               = action.get('equipping')
+        unequipping             = action.get('unequipping')
         view_equip              = action.get('view_equip')
 
         left_click = mouse_action.get('left_click')
@@ -132,8 +133,10 @@ def play(console, player, entities, game_map, game_state):
             game_state = GameStates.SHOW_INVENTORY
         if drop_inventory:
             game_state = GameStates.DROP_INVENTORY
-        elif equipping:
+        if equipping:
             game_state = GameStates.EQUIPABLE_INVENTORY
+        if unequipping:
+            game_state = GameStates.UNEQUIP
         # using/dropping/looting an item
         if selected_item is not None and prev_game_state != GameStates.PLAYER_DEAD and selected_item < len(console.inventory_context):
             item = console.inventory_context[selected_item]
@@ -147,6 +150,8 @@ def play(console, player, entities, game_map, game_state):
                     console.panel.message_log.add_message(targeting_item.use_effect.target_msg)
             elif game_state == GameStates.EQUIPABLE_INVENTORY:
                 item_result = player.equip(item)
+            elif game_state == GameStates.UNEQUIP:
+                item_result = player.unequip(item)
             elif game_state == GameStates.DROP_INVENTORY:
                 item_result = player.drop_item(item)
                 entities.append(item)

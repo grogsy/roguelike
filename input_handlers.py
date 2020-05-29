@@ -66,6 +66,8 @@ def handle_player_turn_keys(key):
         return { 'select_quaffable': True }
     elif key_char == 'e':
         return { 'equipping': True }
+    elif key_char == 'u':
+        return { 'unequipping': True }
     elif key_char == 'w':
         return { 'view_equip': True }
     elif key_char == 's':
