@@ -73,16 +73,22 @@ class Panel:
         # below is experimental
         tcod.console_set_default_foreground(self.console, tcod.gold)
         money = f"$:{player.inventory.guld:05}"
-        tcod.console_print_ex(self.console, 1, 4, tcod.BKGND_NONE, tcod.LEFT, money)
+        tcod.console_print_ex(self.console, 1, 5, tcod.BKGND_NONE, tcod.LEFT, money)
 
         tcod.console_set_default_foreground(self.console, tcod.white)
-        player_level = f"LVL:{player.level.current_level}"
-        tcod.console_print_ex(self.console, 1, 5, tcod.BKGND_NONE, tcod.LEFT, player_level)
+        tcod.console_print_ex(self.console, 1, 6, tcod.BKGND_NONE, tcod.LEFT, f"Floor:{game_map.dungeon_level}")
         player_turn = f"Turn:{player.turn_count}"
-        tcod.console_print_ex(self.console, len(player_level) + 2, 5, tcod.BKGND_NONE, tcod.LEFT, player_turn)
-        player_def = f"DEF:{player.fighter.defense:02}"
-        tcod.console_print_ex(self.console, 1, 6, tcod.BKGND_NONE, tcod.LEFT, player_def)
-        tcod.console_print_ex(self.console, 1, 7, tcod.BKGND_NONE, tcod.LEFT, f"Floor:{game_map.dungeon_level}")
+        tcod.console_print_ex(self.console, 1, 7, tcod.BKGND_NONE, tcod.LEFT, player_turn)
+        player_level = f"LVL:{player.level.current_level}"
+        tcod.console_print_ex(self.console, 1, 8, tcod.BKGND_NONE, tcod.LEFT, player_level)
+        player_con = f"CON:{player.fighter.constitution}"
+        tcod.console_print_ex(self.console, 1, 10, tcod.BKGND_NONE, tcod.LEFT, player_con)
+        player_str = f"STR:{player.fighter.strength}"
+        tcod.console_print_ex(self.console, len(player_con) + 2, 10, tcod.BKGND_NONE, tcod.LEFT, player_str)
+        player_int = f"INT:{player.fighter.intelligence}"
+        tcod.console_print_ex(self.console, 1, 11, tcod.BKGND_NONE, tcod.LEFT, player_int)
+        player_dex = f"DEX:{player.fighter.dexterity}"
+        tcod.console_print_ex(self.console, len(player_int) + 2, 11, tcod.BKGND_NONE, tcod.LEFT, player_dex)
         # above is experimental
 
         self.console_blit()

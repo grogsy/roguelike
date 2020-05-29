@@ -1,8 +1,8 @@
 import random
-
 import tcod
 
 from game_messages import message
+from components.util import has_equip
 
 class Buff:
     def __init__(self, effect, duration, expire_message, name):
@@ -53,21 +53,6 @@ class Fighter:
     '''
     A fighter component which some entities utilize to engage in combat.
     '''
-    # def __init__(self, hp, defense, power, accuracy, mana=0, xp=0):
-    #     self.max_hp = hp
-    #     self.hp = hp
-
-    #     self.mana = mana
-    #     self.max_mana = mana
-    #     self.base_mana_regen = 1
-    #     self.base_mana_regen_rate = 20 # rate is in term of player turns
-
-    #     self.defense = defense
-    #     self.power = power
-    #     self.accuracy = accuracy
-    #     self.buffs = BuffCollection()
-
-    #     self.xp = xp
 
     def __init__(self, hp, power, defense, constitution, strength, intelligence, dexterity, mana=0, xp=0):
         self.base_hp = hp
@@ -86,7 +71,7 @@ class Fighter:
         self.dexterity = dexterity
 
         self.base_power = power
-        self.defense = defense
+        self.base_defense = defense
 
         self.buffs = BuffCollection()
 
@@ -106,7 +91,23 @@ class Fighter:
 
     @property
     def power(self):
-        return self.base_power + self.power_modifier + self.calculate_attack_bonus_from_buffs()
+        power = self.base_power + self.power_modifier + self.calculate_attack_bonus_from_buffs()
+        try:
+            power += self.owner.equipment.power_bonus
+        except AttributeError:
+            pass
+        
+        return power
+
+    @property
+    def defense(self):
+        defense = self.base_defense
+        try:
+            defense  += self.owner.equipment.defense_bonus
+        except AttributeError:
+            pass
+
+        return defense
 
     def perform_accuracy_check(self, other):
         # https://nethackwiki.com/wiki/To-hit
@@ -148,8 +149,11 @@ class Fighter:
         return {
             'Health': self.max_hp,
             'Defense': self.defense,
-            'Attack Power': self.power - self.calculate_attack_bonus_from_buffs(),
-            'Hit Chance': self.accuracy
+            'Attack Power': self.power - self.calculate_attack_bonus_from_buffs() - self.owner.equipment.power_bonus,
+            # 'Constitution': self.constitution,
+            # 'Strength': self.strength,
+            # 'Intelligence': self.intelligence,
+            # 'Dexterity': self.dexterity
         }
 
     def take_damage(self, amount, dmg_type='physical'):
@@ -174,7 +178,6 @@ class Fighter:
 
     def attack(self, target):
         results = []
-        calculated_increased_attack_bonus = self.calculate_attack_bonus_from_buffs()
 
         # https://nethackwiki.com/wiki/To-hit
         accuracy = self.perform_accuracy_check(target)

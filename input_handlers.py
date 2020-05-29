@@ -182,7 +182,7 @@ def handle_player_level_up(key):
     return {}
 
 def handle_view_equip_keys(key):
-    key_char=  chr(key.c)
+    key_char = chr(key.c)
 
     if key_char == 'w' or key.vk == tcod.KEY_ESCAPE:
         return { 'exit': True }

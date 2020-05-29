@@ -51,6 +51,7 @@ class MessageLog:
         for result in results:
             if not result.get('player_move'):
                 print(result)
+
             message                 = result.get('message')
             dead_entity             = result.get('dead')
             item_added              = result.get('item_added')
@@ -77,7 +78,6 @@ class MessageLog:
                 new_game_state = GameStates.PLAYER_TURN
                 self.add_message(Message('Targeting cancelled.'))
             if dead_entity:
-                # if dead_entity.name == 'Player':
                 if is_player(dead_entity):
                     message, new_game_state = kill_player(dead_entity)
                 else:
@@ -90,11 +90,10 @@ class MessageLog:
                 self.add_message(message)
             if new_game_state == GameStates.PLAYER_DEAD:
                 break
-            if player_move or player_wait or item_added:
-                new_game_state = GameStates.ENEMY_TURN
             if player_looting:
                 new_game_state = GameStates.LOOTING
-            if (item_consumed or item_dropped or perform_attack or equipped, unequipped) and is_player(result.get('source')): 
+            if ((player_move or player_wait or item_added) or
+                (item_consumed or item_dropped or perform_attack or equipped or unequipped and is_player(result.get('source')))): 
                 new_game_state = GameStates.ENEMY_TURN
             if player_level_up:
                 new_game_state = GameStates.PLAYER_LEVEL_UP

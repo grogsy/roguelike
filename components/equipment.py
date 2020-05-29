@@ -17,28 +17,28 @@ class Equipment:
 
     @property
     def max_hp_bonus(self):
-        # if self.main_hand is not None:
-        #     bonus += self.main_hand.max_hp_bonus
-
-        # if self.off_hand is not None:
-        #     bonus += self.off_hand.max_hp_bonus
         bonus = 0
-
         for equip in self.slots.values():
             if equip is not None:
-                bonus += max_hp_bonus
+                bonus += equip.max_hp_bonus
 
         return bonus
 
     @property
     def power_bonus(self):
         bonus = 0
+        for equip in self.slots.values():
+            if equip is not None:
+                bonus += equip.power_bonus
 
-        if self.main_hand is not None:
-            bonus += self.main_hand.power_bounus
-
-        if self.off_hand is not None:
-            bonus += self.off_hand.power_bonus
+        return bonus
+    
+    @property
+    def defense_bonus(self):
+        bonus = 0
+        for equip in self.slots.values():
+            if equip is not None:
+                bonus += equip.defense_bonus
 
         return bonus
 

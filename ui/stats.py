@@ -33,8 +33,9 @@ class StatsView:
         tcod.console_blit(window, 0, 0, self.width, window_height, 0, x, y, 1.0, 0.7)
 
     def handle_stat_bonus_display(self, window, player, stat_name, x_offset, y):
-        if stat_name == 'Attack Power' and player.fighter.calculate_attack_bonus_from_buffs() != 0:
+        if stat_name == 'Attack Power' and (player.fighter.calculate_attack_bonus_from_buffs() != 0 or player.equipment.power_bonus != 0):
+            bonus_attack = player.fighter.calculate_attack_bonus_from_buffs() + player.equipment.power_bonus
             tcod.console_set_default_foreground(window, tcod.green)
-            tcod.console_print_ex(window, x_offset, y, tcod.BKGND_NONE, tcod.LEFT, f"+{player.fighter.calculate_attack_bonus_from_buffs()}")
+            tcod.console_print_ex(window, x_offset, y, tcod.BKGND_NONE, tcod.LEFT, f"+{bonus_attack}")
 
         tcod.console_set_default_foreground(window, tcod.white)
