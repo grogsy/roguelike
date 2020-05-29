@@ -101,13 +101,21 @@ class Fighter:
 
     @property
     def defense(self):
-        defense = self.base_defense
+        defense = self.base_defense + int(0.35 * self.dexterity)
         try:
             defense  += self.owner.equipment.defense_bonus
         except AttributeError:
             pass
 
         return defense
+
+    @property
+    def hp_regen_tick(self):
+        return self.base_hp_regen + int(0.35 * self.constitution)
+
+    @property
+    def mp_regen_tick(self):
+        return self.base_mana_regen + int(0.45 * self.intelligence)
 
     def perform_accuracy_check(self, other):
         # https://nethackwiki.com/wiki/To-hit
@@ -149,7 +157,7 @@ class Fighter:
         return {
             'Health': self.max_hp,
             'Defense': self.defense,
-            'Attack Power': self.power - self.calculate_attack_bonus_from_buffs() - self.owner.equipment.power_bonus,
+            'Attack Power': self.base_power + self.power_modifier
             # 'Constitution': self.constitution,
             # 'Strength': self.strength,
             # 'Intelligence': self.intelligence,
@@ -194,22 +202,20 @@ class Fighter:
         else:
             results.append(message(message=f"{self.owner.name} attacks {target.name}, but misses."))
 
-        # for res in results:
-        #     xp_amt = res.get('xp')
-        #     if xp_amt and self.owner.__class__.__name__ == 'Player':
-        #         results.extend(self.owner.gain_xp(xp_amt))
         results.append(message(perform_attack=True, source=self.owner, acc=accuracy, match=d8))
 
         return results
         
     def update_mana_regen(self):
         if self.owner.turn_count % self.base_mana_regen_rate == 0 and self.mana < self.max_mana:
-            self.mana += self.base_mana_regen
+            self.mana += self.mp_regen_tick
 
     def update_hp_regen(self):
         if self.owner.turn_count % self.base_hp_regen_rate == 0 and self.hp < self.max_hp:
-            self.hp += self.base_hp_regen
+            self.hp += self.hp_regen_tick
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
 
     def update_regens(self):
         self.update_mana_regen()
-        self.update_hp_regen
+        self.update_hp_regen()

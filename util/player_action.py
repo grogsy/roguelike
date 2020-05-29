@@ -1,3 +1,4 @@
+import tcod
 from game_messages import message
 
 from .entities import get_blocking_entities_at_location, is_enemy
@@ -96,3 +97,20 @@ def handle_player_take_stairs(console, game_map, player, entities, stairs):
     results.append(message(message="You take the stairs."))
 
     return results
+
+def handle_player_level_up(player, level_up_choice):
+    if level_up_choice == 'CON':
+        player.fighter.base_hp += 5 + int(.35 * player.fighter.constitution)
+        player.fighter.constitution += 1
+        player.fighter.hp = player.fighter.max_hp
+    elif level_up_choice == 'STR':
+        player.fighter.strength += 1
+    elif level_up_choice == 'INT':
+        player.fighter.base_mana += 5 + int(.65 * player.fighter.intelligence)
+        player.fighter.intelligence += 1
+    elif level_up_choice == 'DEX':
+        player.fighter.dexterity += 1
+
+    msg = f"{level_up_choice} permanently raised by 1."
+
+    return message(message=msg, color=tcod.green)

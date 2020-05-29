@@ -16,7 +16,7 @@ class Level:
         results = []
         self.xp += xp_amt
 
-        if self.xp > self.xp_to_next_level:
+        if self.xp >= self.xp_to_next_level:
             self.xp -= self.xp_to_next_level
             self.current_level += 1
 
