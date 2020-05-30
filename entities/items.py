@@ -11,8 +11,16 @@ from game_messages import message
 from game_state import RenderOrder
 
 class EquipmentSlots(Enum):
-    MAIN_HAND = auto()
-    OFF_HAND  = auto()
+    MAIN_HAND   = auto()
+    OFF_HAND    = auto()
+    CHEST       = auto()
+    CLOAK       = auto()
+    GLOVES      = auto()
+    BOOTS       = auto()
+    RING        = auto()
+
+class WeaponSkills(Enum):
+    LONG_SWORD = auto()
 
 class Item(Entity):
     def __init__(self, *args, use_effect=None, **kwargs):
@@ -27,12 +35,25 @@ class Item(Entity):
         return results
 
 class Equipable(Item):
-    def __init__(self, *args, slot, power_bonus=0, defense_bonus=0, max_hp_bonus=0, **kwargs):
+    def __init__(self, *args, slot, power_bonus=0, defense_bonus=0, max_hp_bonus=0, upgrade=0, **kwargs):
         super().__init__(*args, **kwargs)
         self.equip_slot = slot
         self.power_bonus = power_bonus
         self.defense_bonus = defense_bonus
         self.max_hp_bonus = max_hp_bonus
+        self.upgrade_count = upgrade
+
+class Weapon(Equipable):
+    def __init__(*args, weapon_skill, **kwargs):
+        # could implicitly list slot as main hand in here
+        super().__init__(*args, **kwargs)
+        self.skill = weapon_skill
+
+class Armor(Equipable):
+    pass
+
+class Ring(Equipable):
+    pass
 
 class Readable:
     def use(self, *args, **kwargs):

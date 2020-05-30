@@ -1,5 +1,5 @@
 def is_item(entity):
-    return getattr(entity, "use_effect", False)
+    return getattr(entity, "use_effect", False) or is_equipable(entity)
 
 def is_stairs(tile):
     return tile.__class__.__name__ == 'Stairs'
