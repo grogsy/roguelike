@@ -27,24 +27,26 @@ def show_equipped_items(console, player):
     )
 
     y = header_height + 2
+    equip_starting_x = 15
 
     for slot, item in player.equipment.slots.items():
-        x_pos = 0
-        this_slot_text = ' '.join(slot.name.split('_')).title() + ': '
+        try:
+            name = slot.name.split('_')
+        except AttributeError:
+            name = slot.split('_')
+        this_slot_text = ' '.join(name).title() + ': '
         
         tcod.console_set_default_foreground(window, tcod.white)
-        tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, this_slot_text)
-        x_pos += len(this_slot_text) + 1
+        tcod.console_print_ex(window, 0, y, tcod.BKGND_NONE, tcod.LEFT, this_slot_text)
         if item:
             tcod.console_set_default_foreground(window, item.color)
-            tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, item.char)
-            x_pos += 2
+            tcod.console_print_ex(window, equip_starting_x, y, tcod.BKGND_NONE, tcod.LEFT, item.char)
             tcod.console_set_default_foreground(window, tcod.white)
-            tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, item.name)
+            tcod.console_print_ex(window, equip_starting_x + 2, y, tcod.BKGND_NONE, tcod.LEFT, item.name)
         else:
-            tcod.console_print_ex(window, x_pos, y, tcod.BKGND_NONE, tcod.LEFT, "Nothing equipped in this slot.")
+            tcod.console_print_ex(window, equip_starting_x, y, tcod.BKGND_NONE, tcod.LEFT, "Nothing equipped in this slot.")
 
-        y += 1
+        y += 2
 
     
     x = int(console.width / 2 - menu_width / 2)

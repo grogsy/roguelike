@@ -28,3 +28,10 @@ def kill_monster(monster, damage_source):
     monster.render_order = RenderOrder.CORPSE
 
     return death_message
+
+def select_corpse_name(entity, damage_source):
+    '''
+    replace monster name assignment in kill_monster() with a call to this function
+    which will generate a name of the corpse based on killing blow type.
+    '''
+    pass

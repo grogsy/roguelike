@@ -65,15 +65,6 @@ class RootConsole:
             player.stat_logger.render()
         if game_state == GameStates.CHECK_CHAR_STATS:
             self.stats_view.render(player)
-        # if game_state == GameStates.VIEW_EQUIP:
-        #     opts = []
-        #     for slot, item in player.equipment.slots.items():
-        #         if item:
-        #             item_msg = item.name
-        #         else:
-        #             item_msg = "Nothing equipped."
-        #         opts.append(f"{slot.name}: {item_msg}")
-        #     Menu(self, 50, "Equipped Items.").render(opts)
 
     def clear_all(self, entities, game_map, game_state):
         for entity in entities:

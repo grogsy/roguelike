@@ -52,7 +52,7 @@ fighters = {
         'strength': 3,
         'intelligence': 0,
         'dexterity': 3,
-        'xp': 5
+        'xp': 76
     },
     'troll': {
         'hp': 3,
@@ -62,7 +62,7 @@ fighters = {
         'strength': 5,
         'intelligence': 0,
         'dexterity': 3,
-        'xp': 5
+        'xp': 15
     }
 }
 

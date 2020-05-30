@@ -40,4 +40,4 @@ def give_items(player):
     player.inventory.items.append((Book(0, 0, **items.aoe_sleep_book)))
     player.inventory.items.append((Equipable(0, 0, **equipment.long_sword)))
     player.inventory.items.append((Equipable(0, 0, **equipment.long_sword)))
-    player.equip(player.inventory.items[-1])
+    # player.equip(player.inventory.items[-1])

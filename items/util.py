@@ -1,6 +1,11 @@
 import random
 from .items import *
-from entities.items import Potion, Scroll, Projectile, Book, Guld
+from .equipment import equips
+from entities.items import Potion, Scroll, Projectile, Book, Guld, Equipable
+
+def debug_equipment(x, y, name, entities):
+
+    entities.append(Equipable(x, y, **equips[name]))
 
 def generate_item_at_coord(x, y):
     item_chance = random.randint(0, 100)
@@ -8,7 +13,7 @@ def generate_item_at_coord(x, y):
     # 33% for a potion
     # 33% for a scroll
     # 25% for a throwing weapon
-    #  8% for a spellbook
+    #  1% for a spellbook
 
     if item_chance < 25:
         item = generate_random_potion(x, y)
@@ -16,7 +21,7 @@ def generate_item_at_coord(x, y):
         item = generate_random_scroll(x, y)
     elif item_chance < 75:
         item = generate_gold(x, y)
-    elif item_chance < 95:
+    elif item_chance < 99:
         item = generate_random_projectile(x, y)
     else:
         item = generate_random_book(x, y)

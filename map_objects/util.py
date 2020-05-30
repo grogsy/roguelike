@@ -2,8 +2,12 @@ from random import randint, choice
 import tcod
 from entities.inanimate import create_chest
 from enemies import create_enemy
+from items.util import generate_item_at_coord
 
 from .tile import Door, Tunnel
+
+def place_item(x, y, entities):
+    entities.append(generate_item_at_coord(x, y))
 
 def place_enemy(x, y, entities):
     if randint(0, 100) < 80:

@@ -6,9 +6,8 @@ from .tile import Tile, Tunnel, Stairs
 from .floor import Floor
 from .rectangle import Rect
 
-from items.util import generate_item_at_coord
-from .util import place_enemy, create_door, place_chest
-
+from items.util import debug_equipment
+from .util import place_enemy, place_item, create_door, place_chest
 from util.identity import is_door
 
 class GameMap:
@@ -70,6 +69,9 @@ class GameMap:
 
                 rooms.append(new_room)
 
+        debug_equipment(player.x, player.y, 'wooden_shield', entities)
+        debug_equipment(player.x, player.y, 'ring_of_protection', entities)
+
         self.update_tunnels_after_level_generation()
         self.rooms = rooms
 
@@ -123,7 +125,7 @@ class GameMap:
             tile_is_occupied = any([e for e in entities if e.x == x and e.y == y])
 
             if not tile_is_occupied:
-                entities.append(generate_item_at_coord(x, y))
+                place_item(x, y, entities)
 
     def create_tunnels(self, prev_room, new_room):
         new_x, new_y = new_room.center()

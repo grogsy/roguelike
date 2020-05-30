@@ -117,6 +117,18 @@ class Fighter:
     def mp_regen_tick(self):
         return self.base_mana_regen + int(0.45 * self.intelligence)
 
+    @property
+    def all_stats(self):
+        return {
+            'Health': self.max_hp,
+            'Defense': self.base_defense,
+            'Attack Power': self.base_power + self.power_modifier
+            # 'Constitution': self.constitution,
+            # 'Strength': self.strength,
+            # 'Intelligence': self.intelligence,
+            # 'Dexterity': self.dexterity
+        }
+
     def perform_accuracy_check(self, other):
         # https://nethackwiki.com/wiki/To-hit
         roll = 1
@@ -151,18 +163,6 @@ class Fighter:
         # print(f'dex diff: {self.owner.name} ', roll)
 
         return roll
-
-    @property
-    def all_stats(self):
-        return {
-            'Health': self.max_hp,
-            'Defense': self.defense,
-            'Attack Power': self.base_power + self.power_modifier
-            # 'Constitution': self.constitution,
-            # 'Strength': self.strength,
-            # 'Intelligence': self.intelligence,
-            # 'Dexterity': self.dexterity
-        }
 
     def take_damage(self, amount, dmg_type='physical'):
         results = []

@@ -85,9 +85,10 @@ def handle_player_targeting(player, targeting_item, *args, **kwargs):
     return results
 
 def handle_player_take_stairs(console, game_map, player, entities, stairs):
-    results = []
-    old_level              = game_map.dungeon_level
     game_map.dungeon_level = stairs.level
+    old_level              = game_map.dungeon_level
+    
+    results = []
 
     if stairs.level >= len(game_map.floors) + 1:
         create_new_floor(console, game_map, player, entities)
@@ -100,13 +101,13 @@ def handle_player_take_stairs(console, game_map, player, entities, stairs):
 
 def handle_player_level_up(player, level_up_choice):
     if level_up_choice == 'CON':
-        player.fighter.base_hp += 5 + int(.35 * player.fighter.constitution)
+        player.fighter.base_hp += 5 + int(0.35 * player.fighter.constitution)
         player.fighter.constitution += 1
         player.fighter.hp = player.fighter.max_hp
     elif level_up_choice == 'STR':
         player.fighter.strength += 1
     elif level_up_choice == 'INT':
-        player.fighter.base_mana += 5 + int(.65 * player.fighter.intelligence)
+        player.fighter.base_mana += 5 + int(0.65 * player.fighter.intelligence)
         player.fighter.intelligence += 1
     elif level_up_choice == 'DEX':
         player.fighter.dexterity += 1

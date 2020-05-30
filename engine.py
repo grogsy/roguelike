@@ -186,21 +186,6 @@ def play(console, player, entities, game_map, game_state):
         if view_equip:
             game_state = GameStates.VIEW_EQUIP
         if level_up:
-            # if level_up == 'hp':
-            #     player.fighter.max_hp += 20
-            #     player.fighter.hp = player.fighter.max_hp
-            #     msg = "Max HP raised by 20."
-            # elif level_up == 'str':
-            #     player.fighter.power += 1
-            #     msg = "Damage raised by 1."
-            # elif level_up == 'int':
-            #     player.fighter.max_mana += 20
-            #     msg = "Mana raised by 20."
-            # elif level_up == 'def':
-            #     player.fighter.defense += 1
-            #     msg = "Defense raised by 1."
-            
-            # player_turn_results.append(message(message=msg, color=tcod.green))
             player_turn_results.append(handle_player_level_up(player, level_up))
             game_state = GameStates.PLAYER_TURN
 
