@@ -9,6 +9,9 @@ A basic implementation of a roguelike dungeon crawler
 # Installation 
 `pip install -r requirements.txt`
 
+# Running the game
+`python engine.py`
+
 # Basic Controls
 - Movement:
   - Arrow keys
